@@ -1,0 +1,62 @@
+name: 'TerraformPlanScheduled'
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_call:
+    inputs:
+      roleArn:
+        required: true
+
+jobs:
+  terraform:
+    name: 'Plan Terraform'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Assume the role in AWS to roll out the changes
+    # Assume the role in AWS to roll out the changes
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: eu-central-1
+        role-to-assume: ${{ inputs.roleArn }}
+    # Get the github token with access to the relevant repositories from the app
+    - name: Generate token
+      id: generate-token
+      uses: tibdex/github-app-token@v1
+      with:
+        app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+    # Configure github access
+    - uses: de-vri-es/setup-git-credentials@v2
+      with:
+        credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v3
+    # Install the latest version of Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+    # Initialize Terraform
+    - name: Terraform Init
+      run: terraform init -upgrade
+    # Generate plan
+    - name: Terraform Plan Landingzone
+      id: tfplan
+      continue-on-error: true
+      run: terraform plan -input=false -no-color -out=tfplanlz --detailed-exitcode
+
+    # CONCLUDE
+    # Check if plan generated differences or failed
+    - name: Check TF Plan outcome
+      if: steps.tfplan.outputs.exitcode !=0
+      run: exit 1
