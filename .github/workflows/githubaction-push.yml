@@ -46,7 +46,7 @@ jobs:
     steps:
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v3
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
