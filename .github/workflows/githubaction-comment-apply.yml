@@ -143,7 +143,7 @@ jobs:
           git clone "$repo_url" "$module_dir"
           if [ -n "$ref" ]; then
             cd "$module_dir"
-            if git rev-parse --verify "$ref" >/dev/null 2>&1; then
+            if git ls-remote --exit-code --heads "$repo_url" "$ref" || git ls-remote --exit-code --tags "$repo_url" "$ref"; then
               git checkout "$ref"
             else
               echo "Reference $ref not found in $repo_url"
