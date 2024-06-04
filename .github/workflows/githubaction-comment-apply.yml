@@ -161,9 +161,13 @@ jobs:
         find modules -type d -name 'lambda' | while read -r lambda_dir; do
           zip_file="${lambda_dir%/lambda}/lambda.zip"
           echo "Generating $zip_file from $lambda_dir"
-          cd "$lambda_dir"
-          zip -r "../lambda.zip" .
-          cd - > /dev/null
+          if [ -d "$lambda_dir" ]; then
+            cd "$lambda_dir"
+            zip -r "../lambda.zip" .
+            cd - > /dev/null
+          else
+            echo "Directory $lambda_dir does not exist, skipping ZIP generation."
+          fi
         done
 
     # Install the latest version of Terraform CLI
