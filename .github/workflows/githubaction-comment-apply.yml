@@ -139,17 +139,20 @@ jobs:
           repo_url=$(echo "$line" | sed -n 's/.*source *= *"git::\([^"]*\)".*/\1/p' | cut -d'?' -f1)
           ref=$(echo "$line" | sed -n 's/.*source *= *"git::\([^"]*\)".*/\1/p' | grep -oP '(?<=\?ref=).*$')
           module_dir="modules/$(basename "$repo_url" | cut -d'.' -f1)"
-          echo "Cloning $repo_url into $module_dir"
-          git clone "$repo_url" "$module_dir"
-          if [ -n "$ref" ]; then
-            cd "$module_dir"
-            # Check if the reference exists in the remote repository
-            if git ls-remote --exit-code --heads "$repo_url" "$ref" || git ls-remote --exit-code --tags "$repo_url" "$ref"; then
-              git checkout "$ref"
-            else
-              echo "Reference $ref not found in $repo_url"
+          if [ ! -d "$module_dir" ]; then
+            echo "Cloning $repo_url into $module_dir"
+            git clone "$repo_url" "$module_dir"
+            if [ -n "$ref" ]; then
+              cd "$module_dir"
+              if git ls-remote --exit-code --heads "$repo_url" "$ref" || git ls-remote --exit-code --tags "$repo_url" "$ref"; then
+                git checkout "$ref"
+              else
+                echo "Reference $ref not found in $repo_url"
+              fi
+              cd -
             fi
-            cd -
+          else
+            echo "Directory $module_dir already exists, skipping clone."
           fi
         done
 
