@@ -143,7 +143,11 @@ jobs:
           git clone "$repo_url" "$module_dir"
           if [ -n "$ref" ]; then
             cd "$module_dir"
-            git checkout "$ref"
+            if git rev-parse --verify "$ref" >/dev/null 2>&1; then
+              git checkout "$ref"
+            else
+              echo "Reference $ref not found in $repo_url"
+            fi
             cd -
           fi
         done
