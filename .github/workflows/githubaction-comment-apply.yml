@@ -136,10 +136,16 @@ jobs:
         mkdir -p modules
         grep -r 'source *= *"git::' . | while read -r line; do
           module_path=$(echo "$line" | cut -d':' -f1)
-          repo_url=$(echo "$line" | sed -n 's/.*source *= *"git::\([^"]*\)".*/\1/p')
-          module_dir="modules/$(basename "$repo_url" | cut -d'?' -f1 | cut -d'.' -f1)"
+          repo_url=$(echo "$line" | sed -n 's/.*source *= *"git::\([^"]*\)".*/\1/p' | cut -d'?' -f1)
+          ref=$(echo "$line" | sed -n 's/.*source *= *"git::\([^"]*\)".*/\1/p' | grep -oP '(?<=\?ref=).*$')
+          module_dir="modules/$(basename "$repo_url" | cut -d'.' -f1)"
           echo "Cloning $repo_url into $module_dir"
           git clone "$repo_url" "$module_dir"
+          if [ -n "$ref" ]; then
+            cd "$module_dir"
+            git checkout "$ref"
+            cd -
+          fi
         done
 
     - name: Generate lambda.zip for Modules
