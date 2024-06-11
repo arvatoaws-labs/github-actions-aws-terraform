@@ -36,7 +36,7 @@ jobs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Important to fetch all history for branches
     - name: Check for changes in the stack based on input
