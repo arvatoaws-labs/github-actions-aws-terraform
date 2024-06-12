@@ -28,14 +28,15 @@ on:
         type: string
         default: "."
 
+
 jobs:
   check-changes:
-    runs-on: ubuntu-latest
+    runs-on: arvato
     outputs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Important to fetch all history for branches
 
@@ -67,17 +68,40 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
 
+      - name: Set output
+        run: |
+          echo "Final stack_changed value: ${{ env.stack_changed }}"
+          echo "stack_changed=${{ env.stack_changed }}" >> $GITHUB_OUTPUT
+      - name: Debug stack_changed output
+        run: |
+          echo "stack_changed set to: ${{ steps.filter.outputs.stack_changed }}"
+        if: always()
+
   terraform:
     needs: check-changes
     if: needs.check-changes.outputs.stack_changed == 'true'
-    runs-on: ubuntu-latest
+    name: 'Apply Terraform'
+    runs-on: arvato
+    outputs:
+      output1: ${{ steps.job.outputs.job_id }}
     permissions:
       actions: read
       id-token: write
       contents: write
       pull-requests: write
+    defaults:
+      run:
+        shell: bash
 
     steps:
+    # Expose and capture the job ID of the current job
+    - uses: ReeganExE/github-action-job-id@v1.0
+    - name: Job ID output
+      id: job
+      run: |
+        echo ${GH_JOB_0_ID}
+        echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
+
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -104,12 +128,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
-
-    - name: Download Lambda ZIPs
-      uses: actions/download-artifact@v3
-      with:
-        name: lambda-zips
-        path: .
+    - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+      shell: bash
 
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
@@ -123,21 +143,52 @@ jobs:
         cd ${{ inputs.stack }}
         terraform init -upgrade
 
+    # Terraform Validation Steps
+    - name: terraform validate ${{ inputs.stack }}
+      uses: dflook/terraform-validate@v1
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+    - name: terraform fmt ${{ inputs.stack }}
+      uses: dflook/terraform-fmt-check@v1
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
     # Download the plan from S3
     - name: Download Plan from S3
       run: |
         cd ${{ inputs.stack }}
         aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
 
-    # Apply the Terraform plan
+    # Build or change infrastructure according to Terraform configuration files
     - name: Terraform Apply
       id: apply
+      continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
         terraform apply -input=false -no-color tfplan
+    # Upload the plan to S3
+    - name: Upload Plan to S3
+      run: |
+        cd ${{ inputs.stack }}
+        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
-    # Post a comment with the apply outputs and add the 'applied' label
-    - name: Post Apply to GitHub PR
+    # CONCLUDE
+    # If the apply was successful, post a comment with the applied output
+    - name: Post Plan and Apply to GitHub PR
       if: steps.apply.outcome == 'success'
       env:
         URL: ${{ inputs.github_event_issue_comments_url }}
@@ -161,7 +212,79 @@ jobs:
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d '["applied"]'
 
-    # Cleanup lambda.zip files
-    - name: Cleanup lambda.zip Files
+    # If the apply was successful, merge the branch into the main
+    # commented out for testing, eventually one of the solution for fixing fails and merging in multiple environments is disabling auto-merge
+    # - name: Merge into main
+    #   if: steps.apply.outcome == 'success'
+    #   env:
+    #     URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   run: |
+    #     cd ${{ inputs.stack }}
+    #     curl \
+    #     -X PUT \
+    #     $URL \
+    #     -H "Content-Type: application/json" \
+    #     -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+    #     -d '{"commit_title":"terraform update applied"}'
+
+    # remove the organization plan from S3 whether successful or not
+    - name: Delete Plan from S3
       run: |
-        find . -type f -name 'lambda.zip' -delete
+        cd ${{ inputs.stack }}
+        aws s3 rm --recursive s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}
+
+    # If the apply failed, post the errors
+    - name: Post Organization Apply Failure
+      if: steps.apply.outcome == 'failure'
+      env:
+        URL: ${{ inputs.github_event_issue_comments_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd ${{ inputs.stack }}
+        (printf "Apply failed for ${{ inputs.stack }} environment:\n\n**Standard Output:**\n\n\`\`\`" && 
+        echo -n '${{ steps.apply.outputs.stdout }}' &&
+        printf "\`\`\`\n\n**Error Output:**\n\n\`\`\`" &&
+        echo -n '${{ steps.apply.outputs.stderr }}' &&
+        printf "\`\`\`\n\n") > comment.txt
+        jq -R -s '.' < comment.txt > comment2.txt
+        truncate -s -1 comment2.txt
+        (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
+        curl \
+          -X POST \
+          $URL \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d @comment3.txt
+
+  logging:
+    name: 'Save logs'
+    needs: terraform
+    runs-on: arvato
+    if: always() # This job will always run
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Assume the role in AWS to upload the logs
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ inputs.roleArn }}
+
+    # Save previous job logs and upload to s3
+    - name: Retrieve log file and upload to s3
+      run: |
+        TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
+        LOG_FILENAME="TerraformApply_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+        # Get log file
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        # Upload it to s3
+        aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Apply/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
