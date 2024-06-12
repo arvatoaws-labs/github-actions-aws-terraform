@@ -36,7 +36,7 @@ jobs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Important to fetch all history for branches
 
@@ -128,8 +128,12 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
-    - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
-      shell: bash
+
+    - name: Download Lambda ZIPs
+      uses: actions/download-artifact@v3
+      with:
+        name: lambda-zips
+        path: .
 
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
@@ -155,6 +159,7 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt-check@v1
       with:
@@ -256,6 +261,12 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d @comment3.txt
+          
+    # Cleanup lambda.zip files
+    - name: Cleanup lambda.zip Files
+      run: |
+        find . -type f -name 'lambda.zip' -delete
+
 
   logging:
     name: 'Save logs'
