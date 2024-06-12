@@ -36,6 +36,9 @@ jobs:
       id-token: write
       contents: read
       pull-requests: write
+    defaults:
+      run:
+        shell: bash
 
     steps:
     - name: Get PR number
@@ -75,29 +78,14 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
+    - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+      shell: bash
 
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: latest
-
-    - name: Discover and Generate Lambda ZIPs
-      run: |
-        mkdir -p lambda_zips
-        find . -type d -name 'lambda' | while read -r lambda_dir; do
-          zip_file="lambda_zips/$(basename "$(dirname "$lambda_dir")").zip"
-          echo "Generating $zip_file from $lambda_dir"
-          cd "$lambda_dir"
-          zip -r "../../$zip_file" .
-          cd - > /dev/null
-        done
-
-    - name: Upload Lambda ZIPs as Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: lambda-zips
-        path: lambda_zips/*.zip
 
     # Initialize Terraform
     - name: Terraform Init ${{ inputs.stack }}
@@ -117,7 +105,6 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt-check@v1
       with:
@@ -152,18 +139,37 @@ jobs:
         # Execute the dynamically generated terraform command
         eval $COMMAND && terraform show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
+    - name: Discover and Generate Lambda ZIPs
+      run: |
+        mkdir -p lambda_zips
+        find . -type d -name 'lambda' | while read -r lambda_dir; do
+          zip_file="lambda_zips/$(basename "$(dirname "$lambda_dir")").zip"
+          echo "Generating $zip_file from $lambda_dir"
+          cd "$lambda_dir"
+          zip -r "../../$zip_file" .
+          cd - > /dev/null
+        done
+  
+    - name: Upload Lambda ZIPs as Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: lambda-zips
+        path: lambda_zips/*.zip
+  
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
         cd ${{ inputs.stack }}
         aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
+    # CONCLUDE
     # Post a comment with the plan outputs and add the 'planned' label
     - name: Post Plan to GitHub PR
       env:
         COMMENT: ${{ inputs.github_event_issue_comments_url }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        set -x
         cd ${{ inputs.stack }}
         (printf "**Terraform Plan ${{ inputs.stack }} Environment**\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
@@ -181,3 +187,35 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d '["planned"]'
+
+  logging:
+    name: 'Save logs'
+    needs: terraform
+    runs-on: arvato
+    if: always() # This job will always run
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Assume the role in AWS to upload the logs
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ inputs.roleArn }}
+
+    # Save previous job logs and upload to s3
+    - name: Retrieve log file and upload to s3
+      run: |
+        TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
+        LOG_FILENAME="TerraformPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+        # Get log file
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        # Upload it to s3
+        aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
