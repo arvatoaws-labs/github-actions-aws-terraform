@@ -130,15 +130,34 @@ jobs:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
+    
+    - name: Download run ID
+      uses: actions/download-artifact@v4
+      with:
+        name: run-id
+        path: .
+
+    - name: Read run ID
+      id: read-run-id
+      run: |
+        export RUN_ID=$(cat run_id.txt)
+        echo "run_id=$RUN_ID" >> $GITHUB_ENV
+        echo "::set-output name=run_id::$RUN_ID"
 
     - name: Download Lambda ZIPs
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: lambda-zips
-        path: .
+        github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
+        repository: ${{ github.repository }}
+        run-id: ${{ env.run_id }}
 
     - name: List downloaded files
       run: ls -al .
+
+    - name: List contents of lambda_zips
+      run: ls -al lambda_zips
+      if: always()
 
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
