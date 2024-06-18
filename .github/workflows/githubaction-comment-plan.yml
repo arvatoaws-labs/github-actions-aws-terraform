@@ -153,6 +153,17 @@ jobs:
       with:
         name: lambda-zips
         path: lambda_zips/*.zip
+
+    
+    - name: Save run ID
+      id: save-run-id
+      run: echo ${{ github.run_id }} > run_id.txt
+
+    - name: Upload run ID as Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: run-id
+        path: run_id.txt
   
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
