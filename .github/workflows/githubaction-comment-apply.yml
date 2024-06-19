@@ -133,6 +133,8 @@ jobs:
 
     - name: Verify GH_TOKEN
       run: echo "GH_TOKEN is set"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Retrieve Plan Run ID from PR Comment
       id: get-run-id
