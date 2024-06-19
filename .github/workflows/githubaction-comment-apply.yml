@@ -133,6 +133,8 @@ jobs:
 
     - name: Retrieve Plan Run ID from PR Comment
       id: get-run-id
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         PR_NUMBER=${{ inputs.github_event_number }}
         RUN_ID=$(gh pr view $PR_NUMBER --json body -q '.body' | grep -o 'run_id=[0-9]*' | cut -d= -f2)
