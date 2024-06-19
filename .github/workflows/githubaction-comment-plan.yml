@@ -1,8 +1,8 @@
 name: 'TerraformPlan'
 
 on:
-  issue_comment:
-    types: [created]
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_call:
     inputs:
       region:
@@ -145,6 +145,9 @@ jobs:
         name: lambda-zips
         path: lambda_zips/*.zip
 
+    - name: Debug Token
+      run: echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
+
     - name: Update PR with Run ID
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -154,6 +157,7 @@ jobs:
         PR_BODY=$(gh pr view $PR_NUMBER --json body --jq '.body')
         UPDATED_PR_BODY="${PR_BODY}\nrun_id=${RUN_ID}"
         echo "Updating PR #$PR_NUMBER with run_id=$RUN_ID"
+        echo "gh pr edit $PR_NUMBER --body \"$UPDATED_PR_BODY\""
         gh pr edit $PR_NUMBER --body "$UPDATED_PR_BODY"
   
     - name: Upload ${{ inputs.stack }} Plan to S3
