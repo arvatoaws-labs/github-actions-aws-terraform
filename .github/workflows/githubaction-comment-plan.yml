@@ -145,9 +145,6 @@ jobs:
         name: lambda-zips
         path: lambda_zips/*.zip
 
-    - name: Debug Token
-      run: echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}"
-
     - name: Update PR with Run ID
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -216,7 +213,7 @@ jobs:
       run: |
         TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')
         LOG_FILENAME="Plan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
-        gh api repos/${{ github.repository }}/actions/jobs/${{ needs.terraform.outputs.run_id }}/logs > $LOG_FILENAME
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.run_id }}/logs > $LOG_FILENAME
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
