@@ -132,9 +132,13 @@ jobs:
       shell: bash
 
     - name: Verify GH_TOKEN
-      run: echo "GH_TOKEN is set"
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+          echo "GITHUB_TOKEN is not set"
+          exit 1
+        else
+          echo "GITHUB_TOKEN is set"
+        fi
 
     - name: Retrieve Plan Run ID from PR Comment
       id: get-run-id
@@ -143,6 +147,7 @@ jobs:
       run: |
         PR_NUMBER=${{ inputs.github_event_number }}
         echo "Fetching PR details for PR #$PR_NUMBER"
+        gh auth status
         gh pr view $PR_NUMBER --json body --jq '.body' || exit 1
         RUN_ID=$(gh pr view $PR_NUMBER --json body --jq '.body' | grep -o 'run_id=[0-9]*' | cut -d= -f2)
         echo "run_id=$RUN_ID" >> $GITHUB_ENV
