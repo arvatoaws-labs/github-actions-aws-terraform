@@ -161,7 +161,7 @@ jobs:
     
     - name: Update PR with Run ID
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         PR_NUMBER=${{ inputs.github_event_number }}
         RUN_ID=${{ steps.save-run-id.outputs.run_id }}
