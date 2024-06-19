@@ -157,13 +157,20 @@ jobs:
     
     - name: Save run ID
       id: save-run-id
-      run: echo ${{ github.run_id }} > run_id.txt
+      run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
-    - name: Upload run ID as Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: run-id
-        path: run_id.txt
+    - name: Comment run ID on PR
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        COMMENT_URL="${{ inputs.github_event_issue_comments_url }}"
+        PR_COMMENT="Terraform Plan run ID: ${{ github.run_id }}"
+        curl \
+          -X POST \
+          $COMMENT_URL \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -d "{\"body\": \"$PR_COMMENT\"}"
   
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3

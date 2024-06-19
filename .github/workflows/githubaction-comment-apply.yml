@@ -131,6 +131,14 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
+    - name: Retrieve Plan Run ID from PR Comment
+      id: get-run-id
+      run: |
+        PR_NUMBER=${{ inputs.github_event_number }}
+        RUN_ID=$(gh pr view $PR_NUMBER --json body -q '.body' | grep -o 'run_id=[0-9]*' | cut -d= -f2)
+        echo "run_id=$RUN_ID" >> $GITHUB_ENV
+        echo "::set-output name=run_id::$RUN_ID"
+
     - name: Download Lambda ZIPs
       uses: actions/download-artifact@v4
       with:
