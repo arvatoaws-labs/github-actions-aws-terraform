@@ -30,7 +30,7 @@ on:
 
 jobs:
   check-changes:
-    runs-on: arvato
+    runs-on: ubuntu-latest
     outputs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
@@ -80,7 +80,7 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.stack_changed == 'true'
     name: 'Apply Terraform'
-    runs-on: arvato
+    runs-on: ubuntu-latest
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
     permissions:
@@ -166,19 +166,16 @@ jobs:
           exit 1
         else
           echo "run_id=$RUN_ID" >> $GITHUB_ENV
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "::set-output name=run_id::$RUN_ID"
         fi
 
     - name: Download Lambda ZIPs
       uses: actions/download-artifact@v4
       with:
         name: lambda-zips
-        github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
+        github-token: ${{ secrets.GITHUB_TOKEN }}
         repository: ${{ github.repository }}
-        run-id: ${{ env.RUN_ID }}
-
-    - name: List downloaded files
-      run: ls -al .
+        run-id: ${{ steps.get-run-id.outputs.run_id }}
 
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
@@ -316,7 +313,7 @@ jobs:
   logging:
     name: 'Save logs'
     needs: terraform
-    runs-on: arvato
+    runs-on: ubuntu-latest
     if: always() # This job will always run
     permissions:
       actions: read
