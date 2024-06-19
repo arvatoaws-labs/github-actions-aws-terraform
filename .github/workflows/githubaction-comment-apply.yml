@@ -28,7 +28,6 @@ on:
         type: string
         default: "."
 
-
 jobs:
   check-changes:
     runs-on: arvato
@@ -167,23 +166,19 @@ jobs:
           exit 1
         else
           echo "run_id=$RUN_ID" >> $GITHUB_ENV
-          echo "::set-output name=run_id::$RUN_ID"
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
         fi
 
     - name: Download Lambda ZIPs
       uses: actions/download-artifact@v4
       with:
         name: lambda-zips
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+        github-token: ${{ secrets.GH_PAT }} # token with actions:read permissions on target repo
         repository: ${{ github.repository }}
-        run-id: ${{ steps.get-run-id.outputs.run_id }}
+        run-id: ${{ env.RUN_ID }}
 
     - name: List downloaded files
       run: ls -al .
-
-    - name: List contents of lambda_zips
-      run: ls -al lambda_zips
-      if: always()
 
     # Install the latest version of Terraform CLI
     - name: Setup Terraform
