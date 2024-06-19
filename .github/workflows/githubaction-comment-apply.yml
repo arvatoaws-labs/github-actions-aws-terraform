@@ -148,10 +148,22 @@ jobs:
         PR_NUMBER=${{ inputs.github_event_number }}
         echo "Fetching PR details for PR #$PR_NUMBER"
         gh auth status
-        gh pr view $PR_NUMBER --json body --jq '.body' || exit 1
-        RUN_ID=$(gh pr view $PR_NUMBER --json body --jq '.body' | grep -o 'run_id=[0-9]*' | cut -d= -f2)
-        echo "run_id=$RUN_ID" >> $GITHUB_ENV
-        echo "::set-output name=run_id::$RUN_ID"
+    
+        # Store the PR body in a variable and output it for debugging
+        PR_BODY=$(gh pr view $PR_NUMBER --json body --jq '.body' || exit 1)
+        echo "PR Body: $PR_BODY"
+    
+        # Extract the RUN_ID from the PR body
+        RUN_ID=$(echo "$PR_BODY" | grep -o 'run_id=[0-9]*' | cut -d= -f2)
+        echo "Extracted RUN_ID: $RUN_ID"
+    
+        if [ -z "$RUN_ID" ]; then
+          echo "Failed to extract RUN_ID"
+          exit 1
+        else
+          echo "run_id=$RUN_ID" >> $GITHUB_ENV
+          echo "::set-output name=run_id::$RUN_ID"
+        fi
 
     - name: Download Lambda ZIPs
       uses: actions/download-artifact@v4
