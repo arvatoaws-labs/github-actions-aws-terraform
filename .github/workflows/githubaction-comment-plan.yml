@@ -44,6 +44,10 @@ jobs:
     - name: Get PR number
       run: echo ${{ inputs.github_event_number }}
 
+    - name: Save run ID
+      id: save-run-id
+      run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
+
     # Expose and capture the job ID of the current job
     - uses: ReeganExE/github-action-job-id@v1.0
     - name: Job ID output
@@ -157,7 +161,7 @@ jobs:
     
     - name: Update PR with Run ID
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GH_PAT }}  # Ensure GH_PAT is set in your secrets with the necessary permissions
       run: |
         PR_NUMBER=${{ inputs.github_event_number }}
         RUN_ID=${{ steps.save-run-id.outputs.run_id }}
