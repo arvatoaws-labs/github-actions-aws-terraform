@@ -161,7 +161,7 @@ jobs:
         curl -X PATCH \
           -H "Authorization: token $GITHUB_TOKEN" \
           -H "Content-Type: application/json" \
-          -d "{\"body\":\"$UPDATED_PR_BODY\"}" \
+          -d "{\"body\":\"$(echo "$UPDATED_PR_BODY" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')\"}" \
           https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER
   
     - name: Upload ${{ inputs.stack }} Plan to S3
