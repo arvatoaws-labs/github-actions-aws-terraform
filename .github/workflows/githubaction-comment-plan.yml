@@ -30,12 +30,12 @@ jobs:
     name: 'Plan Terraform'
     runs-on: arvato
     outputs:
-      output1: ${{ steps.save-run-id.outputs.run_id }}
+      run_id: ${{ steps.save-run-id.outputs.run_id }}
     permissions:
       actions: read
       id-token: write
       contents: write
-      pull-requests: write
+      pull-requests: write  # Explicitly adding permission to modify pull requests
     defaults:
       run:
         shell: bash
@@ -227,7 +227,7 @@ jobs:
         TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
         LOG_FILENAME="TerraformPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
         # Get log file
-        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        gh api repos/${{ github.repository }}/actions/jobs/${{ needs.terraform.outputs.run_id }}/logs > $LOG_FILENAME
         # Upload it to s3
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:
