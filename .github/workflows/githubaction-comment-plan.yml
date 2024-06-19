@@ -216,7 +216,9 @@ jobs:
       run: |
         TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
         LOG_FILENAME="TerraformPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
-        gh api repos/${{ github.repository }}/actions/jobs/${{ needs.terraform.outputs.run_id }}/logs > $LOG_FILENAME
+        # Get log file
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        # Upload it to s3
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
