@@ -34,7 +34,7 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: read
+      contents: write
       pull-requests: write
     defaults:
       run:
@@ -158,7 +158,6 @@ jobs:
         name: lambda-zips
         path: lambda_zips/*.zip
 
-    
     - name: Update PR with Run ID
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
