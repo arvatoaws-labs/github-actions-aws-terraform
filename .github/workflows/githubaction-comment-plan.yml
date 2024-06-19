@@ -48,7 +48,6 @@ jobs:
       id: save-run-id
       run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
-    # Expose and capture the job ID of the current job
     - uses: ReeganExE/github-action-job-id@v1.0
     - name: Job ID output
       id: job
@@ -56,7 +55,6 @@ jobs:
         echo ${GH_JOB_0_ID}
         echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
 
-    # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -64,7 +62,6 @@ jobs:
         role-to-assume: ${{ inputs.roleArn }}
         role-session-name: GitHubTerraformDeployment
 
-    # Get the github token with access to the relevant repositories from the app
     - name: Generate token
       id: generate-token
       uses: tibdex/github-app-token@v2
@@ -72,12 +69,10 @@ jobs:
         app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-    # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
-    # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v4
       with:
@@ -85,19 +80,16 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
-    # Install the latest version of Terraform CLI
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: latest
 
-    # Initialize Terraform
     - name: Terraform Init ${{ inputs.stack }}
       run: |
         cd ${{ inputs.stack }}
         terraform init -upgrade
 
-    # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
       with:
@@ -109,6 +101,7 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt-check@v1
       with:
@@ -121,26 +114,20 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-    # Generate terraform plan
     - name: Terraform Plan ${{ inputs.stack }}
       id: tfplan
       continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
-        # Bash script to build terraform plan command dynamically
         COMMAND="terraform plan -input=false -no-color -out=tfplan"
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
-        # Loop over each secret in the GitHub Actions environment
         for key in $SECRETS; do
           value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
-          # Check if the secret name has the prefix "TF_VAR_"
           if [[ $key == TF_VAR_* ]]; then
-            # Add the secret as an input variable to the terraform command
             COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
           fi
         done
-        # Execute the dynamically generated terraform command
         eval $COMMAND && terraform show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
     - name: Discover and Generate Lambda ZIPs
@@ -169,14 +156,11 @@ jobs:
         echo "Updating PR #$PR_NUMBER with run_id=$RUN_ID"
         gh pr edit $PR_NUMBER --body "$UPDATED_PR_BODY"
   
-    # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
         cd ${{ inputs.stack }}
         aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
-    # CONCLUDE
-    # Post a comment with the plan outputs and add the 'planned' label
     - name: Post Plan to GitHub PR
       env:
         COMMENT: ${{ inputs.github_event_issue_comments_url }}
@@ -205,7 +189,7 @@ jobs:
     name: 'Save logs'
     needs: terraform
     runs-on: arvato
-    if: always() # This job will always run
+    if: always()
     permissions:
       actions: read
       id-token: write
@@ -214,21 +198,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    # Assume the role in AWS to upload the logs
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
 
-    # Save previous job logs and upload to s3
     - name: Retrieve log file and upload to s3
       run: |
-        TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
+        TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')
         LOG_FILENAME="TerraformPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
-        # Get log file
         gh api repos/${{ github.repository }}/actions/jobs/${{ needs.terraform.outputs.run_id }}/logs > $LOG_FILENAME
-        # Upload it to s3
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
