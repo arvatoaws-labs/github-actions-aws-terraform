@@ -30,7 +30,7 @@ jobs:
     name: 'Plan Terraform'
     runs-on: arvato
     outputs:
-      output1: ${{ steps.job.outputs.job_id }}
+      output1: ${{ steps.save-run-id.outputs.run_id }}
     permissions:
       actions: read
       id-token: write
@@ -155,22 +155,16 @@ jobs:
         path: lambda_zips/*.zip
 
     
-    - name: Save run ID
-      id: save-run-id
-      run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
-
-    - name: Comment run ID on PR
+    - name: Update PR with Run ID
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        COMMENT_URL="${{ inputs.github_event_issue_comments_url }}"
-        PR_COMMENT="Terraform Plan run ID: ${{ github.run_id }}"
-        curl \
-          -X POST \
-          $COMMENT_URL \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token $GITHUB_TOKEN" \
-          -d "{\"body\": \"$PR_COMMENT\"}"
+        PR_NUMBER=${{ inputs.github_event_number }}
+        RUN_ID=${{ steps.save-run-id.outputs.run_id }}
+        PR_BODY=$(gh pr view $PR_NUMBER --json body --jq '.body')
+        UPDATED_PR_BODY="${PR_BODY}\nrun_id=${RUN_ID}"
+        echo "Updating PR #$PR_NUMBER with run_id=$RUN_ID"
+        gh pr edit $PR_NUMBER --body "$UPDATED_PR_BODY"
   
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
