@@ -30,7 +30,7 @@ on:
 
 jobs:
   check-changes:
-    runs-on: ubuntu-latest
+    runs-on: arvato
     outputs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
@@ -80,7 +80,7 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.stack_changed == 'true'
     name: 'Apply Terraform'
-    runs-on: ubuntu-latest
+    runs-on: arvato
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
     permissions:
@@ -313,7 +313,7 @@ jobs:
   logging:
     name: 'Save logs'
     needs: terraform
-    runs-on: ubuntu-latest
+    runs-on: arvato
     if: always() # This job will always run
     permissions:
       actions: read
