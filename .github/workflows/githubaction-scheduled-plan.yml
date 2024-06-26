@@ -1,4 +1,4 @@
-name: 'TerraformPlanScheduled'
+name: 'TofuPlanScheduled'
 
 on:
   workflow_dispatch:
@@ -16,8 +16,8 @@ on:
         default: "."
 
 jobs:
-  terraform:
-    name: 'Plan Terraform'
+  tofu:
+    name: 'Plan Tofu'
     runs-on: arvato
     permissions:
       id-token: write
@@ -48,11 +48,9 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v4
-    # Install the latest version of Terraform CLI
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: latest
+    # Install the latest version of Tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
     # Initialize Terraform
     - name: Terraform Init
       run: |
@@ -81,13 +79,13 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     # Generate plan
-    - name: Terraform Plan Landingzone
+    - name: Tofu Plan Landingzone
       id: tfplan
       continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
-        # Bash script to build terraform plan command dynamically
-        COMMAND="terraform plan -input=false -no-color -out=tfplanlz --detailed-exitcode"
+        # Bash script to build tofu plan command dynamically
+        COMMAND="tofu plan -input=false -no-color -out=tfplanlz --detailed-exitcode"
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
         # Loop over each secret in the GitHub Actions environment
@@ -95,11 +93,11 @@ jobs:
           value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
           # Check if the secret name has the prefix "TF_VAR_"
           if [[ $key == TF_VAR_* ]]; then
-            # Add the secret as an input variable to the terraform command
+            # Add the secret as an input variable to the tofu command
             COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
           fi
         done
-        # Execute the dynamically generated terraform command
+        # Execute the dynamically generated tofu command
         eval $COMMAND
 
     # CONCLUDE

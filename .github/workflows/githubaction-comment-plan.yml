@@ -1,4 +1,4 @@
-name: 'TerraformPlan'
+name: 'TofuPlan'
 
 on:
   pull_request:
@@ -26,8 +26,8 @@ on:
         default: "."
 
 jobs:
-  terraform:
-    name: 'Plan Terraform'
+  tofu:
+    name: 'Plan Tofu'
     runs-on: arvato
     outputs:
       run_id: ${{ steps.save-run-id.outputs.run_id }}
@@ -81,15 +81,15 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: latest
+    # Install the latest version of tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
 
-    - name: Terraform Init ${{ inputs.stack }}
+    # Initialize Tofu
+    - name: Tofu Init ${{ inputs.stack }}
       run: |
         cd ${{ inputs.stack }}
-        terraform init -upgrade
+        tofu init -upgrade
 
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
@@ -115,21 +115,25 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-    - name: Terraform Plan ${{ inputs.stack }}
+    # Generate tofu plan
+    - name: Tofu Plan ${{ inputs.stack }}
       id: tfplan
       continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
-        COMMAND="terraform plan -input=false -no-color -out=tfplan"
+        # Bash script to build tofu plan command dynamically
+        COMMAND="tofu plan -input=false -no-color -out=tfplan"
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
         for key in $SECRETS; do
           value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
           if [[ $key == TF_VAR_* ]]; then
+            # Add the secret as an input variable to the tofu command
             COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
           fi
         done
-        eval $COMMAND && terraform show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
+        # Execute the dynamically generated tofu command
+        eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
     - name: Discover and Generate Lambda ZIPs
       run: |
@@ -174,7 +178,7 @@ jobs:
       run: |
         set -x
         cd ${{ inputs.stack }}
-        (printf "**Terraform Plan ${{ inputs.stack }} Environment**\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
+        (printf "**Tofu Plan ${{ inputs.stack }} Environment**\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
@@ -193,9 +197,9 @@ jobs:
 
   logging:
     name: 'Save logs'
-    needs: terraform
-    runs-on: ubuntu-latest
-    if: always()
+    needs: tofu
+    runs-on: arvato
+    if: always() # This job will always run
     permissions:
       actions: read
       id-token: write
@@ -212,9 +216,11 @@ jobs:
 
     - name: Retrieve log file and upload to s3
       run: |
-        TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')
-        LOG_FILENAME="Plan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
-        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.terraform.outputs.output1 }}/logs > $LOG_FILENAME
+        TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
+        LOG_FILENAME="TofuPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+        # Get log file
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.tofu.outputs.output1 }}/logs > $LOG_FILENAME
+        # Upload it to s3
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

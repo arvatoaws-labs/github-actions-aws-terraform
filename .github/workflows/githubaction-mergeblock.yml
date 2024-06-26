@@ -5,7 +5,7 @@ on:
   workflow_call:
 
 jobs:
-  terraform:
+  tofu:
     name: 'Block Merge'
     runs-on: arvato
     permissions:
