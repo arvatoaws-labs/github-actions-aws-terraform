@@ -81,16 +81,7 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
-    # Install the latest version of tofu CLI
-    - name: Setup Tofu
-      uses: opentofu/setup-opentofu@v1
-
-    # Initialize Tofu
-    - name: Tofu Init ${{ inputs.stack }}
-      run: |
-        cd ${{ inputs.stack }}
-        tofu init -upgrade
-
+    # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
       with:
@@ -115,6 +106,15 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
+    # Install the latest version of Tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
+    # Initialize Terraform
+    - name: Tofu Init
+      run: |
+        cd ${{ inputs.stack }}
+        rm -rf .terraform .terraform.lock.hcl
+        tofu init -upgrade
     # Generate tofu plan
     - name: Tofu Plan ${{ inputs.stack }}
       id: tfplan

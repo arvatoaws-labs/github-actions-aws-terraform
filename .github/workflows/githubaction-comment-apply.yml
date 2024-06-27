@@ -175,16 +175,6 @@ jobs:
         repository: ${{ github.repository }}
         run-id: ${{ steps.get-run-id.outputs.run_id }}
 
-    # Install the latest version of tofu CLI
-    - name: Setup Tofu
-      uses: opentofu/setup-opentofu@v1
-
-    # Initialize Tofu
-    - name: Tofu Init
-      run: |
-        cd ${{ inputs.stack }}
-        tofu init -upgrade
-
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
@@ -216,6 +206,15 @@ jobs:
         cd ${{ inputs.stack }}
         aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
 
+    # Install the latest version of Tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
+    # Initialize Terraform
+    - name: Tofu Init
+      run: |
+        cd ${{ inputs.stack }}
+        rm -rf .terraform .terraform.lock.hcl
+        tofu init -upgrade
     # Build or change infrastructure according to Tofu configuration files
     - name: Tofu Apply
       id: apply

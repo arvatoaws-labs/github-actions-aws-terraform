@@ -18,7 +18,7 @@ on:
 jobs:
   tofu:
     name: 'Plan Tofu'
-    runs-on: arvato
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
@@ -48,14 +48,6 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v4
-    # Install the latest version of Tofu CLI
-    - name: Setup Tofu
-      uses: opentofu/setup-opentofu@v1
-    # Initialize Terraform
-    - name: Terraform Init
-      run: |
-        cd ${{ inputs.stack }}
-        terraform init -upgrade
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
       with:
@@ -78,6 +70,15 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+    # Install the latest version of Tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
+    # Initialize Terraform
+    - name: Tofu Init
+      run: |
+        cd ${{ inputs.stack }}
+        rm -rf .terraform .terraform.lock.hcl
+        tofu init -upgrade
     # Generate plan
     - name: Tofu Plan Landingzone
       id: tfplan
