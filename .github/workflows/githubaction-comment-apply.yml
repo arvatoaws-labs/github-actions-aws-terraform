@@ -175,6 +175,11 @@ jobs:
         repository: ${{ github.repository }}
         run-id: ${{ steps.get-run-id.outputs.run_id }}
 
+    - name: Unzip Lambda ZIPs
+      run: |
+        mkdir -p lambda_zips_unzipped
+        find . -type f -name '*.zip' -exec unzip -o {} -d lambda_zips_unzipped \;
+        
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1

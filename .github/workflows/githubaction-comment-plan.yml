@@ -137,11 +137,13 @@ jobs:
 
     - name: Discover and Generate Lambda ZIPs
       run: |
-        mkdir -p $(pwd)/lambda_zips
-        find $(pwd) -type d -name 'lambda' | while read -r lambda_dir; do
-          zip_file="$(pwd)/lambda_zips/$(basename "$(dirname "$lambda_dir")").zip"
+        mkdir -p lambda_zips
+        find . -type d -name 'lambda' | while read -r lambda_dir; do
+          zip_file="lambda_zips/$(basename "$(dirname "$lambda_dir")").zip"
           echo "Generating $zip_file from $lambda_dir"
-          zip -r "$zip_file" "$lambda_dir"
+          cd "$lambda_dir"
+          zip -r "../../$zip_file" ./*
+          cd - > /dev/null
         done
   
     - name: Upload Lambda ZIPs as Artifacts
