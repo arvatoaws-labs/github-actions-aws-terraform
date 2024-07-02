@@ -223,7 +223,13 @@ jobs:
     # Install the latest version of Tofu CLI
     - name: Setup Tofu
       uses: opentofu/setup-opentofu@v1
-      
+    # Initialize Terraform
+    - name: Tofu Init
+      run: |
+        cd ${{ inputs.stack }}
+        rm -rf .terraform .terraform.lock.hcl
+        tofu init -upgrade
+    # Build or change infrastructure according to Tofu configuration files
     - name: Move Unzipped Lambda ZIPs to Modules
       run: |
         find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
@@ -235,13 +241,7 @@ jobs:
     
     - name: List Lambda directories in Modules
       run: ls -R dev/.terraform/modules/
-    # Initialize Terraform
-    - name: Tofu Init
-      run: |
-        cd ${{ inputs.stack }}
-        rm -rf .terraform .terraform.lock.hcl
-        tofu init -upgrade
-    # Build or change infrastructure according to Tofu configuration files
+      
     - name: Tofu Apply
       id: apply
       continue-on-error: true
