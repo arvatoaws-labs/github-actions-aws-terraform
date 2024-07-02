@@ -232,8 +232,9 @@ jobs:
       run: |
         find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
           module_name=$(basename "$dir")
-          if [ -d "${{ inputs.stack }}/.terraform/modules/$module_name/lambda" ]; then
-            mv "$dir"/* "${{ inputs.stack }}/.terraform/modules/$module_name/lambda/"
+          module_lambda_dir="${{ inputs.stack }}/.terraform/modules/${module_name}/lambda"
+          if [ -d "$module_lambda_dir" ]; then
+            mv "$dir"/* "$module_lambda_dir/"
           fi
         done
 
@@ -241,9 +242,12 @@ jobs:
       run: |
         find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
           module_name=$(basename "$dir")
-          cd "${{ inputs.stack }}/.terraform/modules/$module_name/lambda"
-          zip -r lambda.zip .
-          cd -
+          module_lambda_dir="${{ inputs.stack }}/.terraform/modules/${module_name}/lambda"
+          if [ -d "$module_lambda_dir" ]; then
+            cd "$module_lambda_dir"
+            zip -r lambda.zip .
+            cd -
+          fi
         done
 
     - name: List Lambda directories in Modules
