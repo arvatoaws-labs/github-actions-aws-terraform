@@ -217,34 +217,22 @@ jobs:
         repository: ${{ github.repository }}
         run-id: ${{ steps.get-run-id.outputs.run_id }}
 
-    - name: Unzip Lambda ZIPs
+    - name: Unzip Lambda Files
       run: |
         mkdir -p lambda_zips_unzipped
-        find . -type f -name '*.zip' -exec sh -c '
-          for file; do
-            dir=$(basename "$file" .zip)
-            mkdir -p lambda_zips_unzipped/$dir
-            unzip -o "$file" -d lambda_zips_unzipped/$dir
-          done
-        ' sh {} +
-
-    - name: Move Unzipped Lambda ZIPs to Modules
-      run: |
+        find . -type f -name '*.zip' -exec unzip -o {} -d lambda_zips_unzipped \;
         find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
-          module_name=$(basename "$dir")
-          module_lambda_dir="dev/.terraform/modules/${module_name}/lambda"
-          if [ -d "$module_lambda_dir" ]; then
-            mv "$dir"/* "$module_lambda_dir/"
+          if [ -d "$dir/lambda" ]; then
+            mv "$dir/lambda"/*.zip "$dir/" 2>/dev/null || true
           fi
         done
-
-    - name: Create Lambda ZIPs in Module Directories
-      run: |
-        find dev/.terraform/modules -type d -name 'lambda' | while read -r dir; do
-          cd "$dir"
-          zip -r lambda.zip .
-          cd -
+        find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
+          module_name=$(basename "$dir")
+          mkdir -p "dev/.terraform/modules/$module_name"
+          mv "$dir"/*.zip "dev/.terraform/modules/$module_name/" 2>/dev/null || true
         done
+        # Check if the lambda.zip files are in the correct paths
+        find dev/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
 
     - name: List Lambda directories in Modules
       run: ls -R dev/.terraform/modules/
