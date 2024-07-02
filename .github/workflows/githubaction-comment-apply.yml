@@ -240,10 +240,6 @@ jobs:
           echo "Contents of $dir:"
           ls -l "$dir"
         done
-    
-    - name: Verify Lambda ZIPs
-      run: |
-        find .terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
 
     - name: Tofu Apply
       id: apply
