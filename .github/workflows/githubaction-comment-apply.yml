@@ -167,14 +167,6 @@ jobs:
           echo "::set-output name=run_id::$RUN_ID"
         fi
 
-    - name: Download Lambda ZIPs
-      uses: actions/download-artifact@v4
-      with:
-        name: lambda-zips
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}
-        run-id: ${{ steps.get-run-id.outputs.run_id }}
-
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
@@ -217,6 +209,14 @@ jobs:
         tofu init -upgrade
     # Build or change infrastructure according to Tofu configuration files
 
+    - name: Download Lambda ZIPs
+      uses: actions/download-artifact@v4
+      with:
+        name: lambda-zips
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        repository: ${{ github.repository }}
+        run-id: ${{ steps.get-run-id.outputs.run_id }}
+
     - name: Unzip Lambda ZIPs
       run: |
         mkdir -p lambda_zips_unzipped
@@ -232,7 +232,7 @@ jobs:
       run: |
         find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
           module_name=$(basename "$dir")
-          module_lambda_dir="${{ inputs.stack }}/.terraform/modules/${module_name}/lambda"
+          module_lambda_dir="dev/.terraform/modules/${module_name}/lambda"
           if [ -d "$module_lambda_dir" ]; then
             mv "$dir"/* "$module_lambda_dir/"
           fi
@@ -240,18 +240,18 @@ jobs:
 
     - name: Create Lambda ZIPs in Module Directories
       run: |
-        find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
-          module_name=$(basename "$dir")
-          module_lambda_dir="${{ inputs.stack }}/.terraform/modules/${module_name}/lambda"
-          if [ -d "$module_lambda_dir" ]; then
-            cd "$module_lambda_dir"
-            zip -r lambda.zip .
-            cd -
-          fi
+        find dev/.terraform/modules -type d -name 'lambda' | while read -r dir; do
+          cd "$dir"
+          zip -r lambda.zip .
+          cd -
         done
 
     - name: List Lambda directories in Modules
-      run: ls -R ${{ inputs.stack }}/.terraform/modules/
+      run: ls -R dev/.terraform/modules/
+
+    - name: Verify Lambda ZIPs
+      run: |
+        find dev/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
 
     - name: Tofu Apply
       id: apply
