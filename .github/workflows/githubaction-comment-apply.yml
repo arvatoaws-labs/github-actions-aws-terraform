@@ -216,6 +216,10 @@ jobs:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         repository: ${{ github.repository }}
         run-id: ${{ steps.get-run-id.outputs.run_id }}
+    
+    - name: Verify artifact contents
+      run: |
+        ls -R lambda_zips
 
     - name: Unzip Lambda Files
       run: |
