@@ -236,7 +236,6 @@ jobs:
           module_name=$(basename "$dir")
           if [ -d "${{ inputs.stack }}/.terraform/modules/$module_name/lambda" ]; then
             mv "$dir"/*.py "${{ inputs.stack }}/.terraform/modules/$module_name/lambda/"
-            mv "$dir"/*.zip "${{ inputs.stack }}/.terraform/modules/$module_name/"
           fi
         done
 
