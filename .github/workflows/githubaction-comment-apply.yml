@@ -216,6 +216,7 @@ jobs:
         rm -rf .terraform .terraform.lock.hcl
         tofu init -upgrade
     # Build or change infrastructure according to Tofu configuration files
+
     - name: Unzip Lambda ZIPs
       run: |
         mkdir -p lambda_zips_unzipped
@@ -226,10 +227,7 @@ jobs:
             unzip -o "$file" -d lambda_zips_unzipped/$dir
           done
         ' sh {} +
-    
-    - name: List unzipped Lambda directories
-      run: ls -R lambda_zips_unzipped
-      
+
     - name: Move Unzipped Lambda ZIPs to Modules
       run: |
         find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
@@ -237,6 +235,15 @@ jobs:
           if [ -d "${{ inputs.stack }}/.terraform/modules/$module_name/lambda" ]; then
             mv "$dir"/* "${{ inputs.stack }}/.terraform/modules/$module_name/lambda/"
           fi
+        done
+
+    - name: Create Lambda ZIPs in Module Directories
+      run: |
+        find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
+          module_name=$(basename "$dir")
+          cd "${{ inputs.stack }}/.terraform/modules/$module_name/lambda"
+          zip -r lambda.zip .
+          cd -
         done
 
     - name: List Lambda directories in Modules
