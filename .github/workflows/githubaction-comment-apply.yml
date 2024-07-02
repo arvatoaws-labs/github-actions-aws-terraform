@@ -35,7 +35,7 @@ jobs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Important to fetch all history for branches
     - name: Check for changes in the stack based on input
@@ -235,18 +235,16 @@ jobs:
         # Check if the lambda.zip files are in the correct paths
         find .terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
 
-    - name: List Lambda directories in Modules
-      run: ls -R .terraform/modules/
-
     - name: Verify Lambda ZIPs
       run: |
-        find .terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
+        find ${{ inputs.stack }}/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
 
     - name: Tofu Apply
       id: apply
       continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
+        ls -R
         tofu apply -input=false -no-color tfplan
     # Upload the plan to S3
     - name: Upload Plan to S3
