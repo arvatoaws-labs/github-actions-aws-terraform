@@ -229,11 +229,12 @@ jobs:
         done
         find lambda_zips_unzipped -type d -mindepth 1 -maxdepth 1 | while read -r dir; do
           module_name=$(basename "$dir")
-          mv "$dir"/*.zip "${{ inputs.stack }}$module_name/" 2>/dev/null || true
+          mkdir -p ".terraform/modules/$module_name"
+          mv "$dir"/*.zip ".terraform/modules/$module_name/" 2>/dev/null || true
         done
         # Check if the lambda.zip files are in the correct paths
-        find ${{ inputs.stack }} -type f -name 'lambda.zip' -exec ls -l {} \;
-        ls -R lambda_zips_unzipped
+        find .terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
+        ls -R
 
     - name: Verify Lambda ZIPs
       run: |
