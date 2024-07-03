@@ -137,36 +137,6 @@ jobs:
           echo "GITHUB_TOKEN is set"
         fi
 
-    - name: Retrieve Plan Run ID from PR Comment
-      id: get-run-id
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        PR_NUMBER=${{ inputs.github_event_number }}
-        echo "Fetching PR details for PR #$PR_NUMBER"
-        gh auth status
-
-        # Store the PR body in a variable and output it for debugging
-        PR_BODY=$(gh pr view $PR_NUMBER --json body --jq '.body' || exit 1)
-        echo "PR Body: $PR_BODY"
-
-        if [ -z "$PR_BODY" ]; then
-          echo "PR body is empty or could not be retrieved"
-          exit 1
-        fi
-
-        # Extract the RUN_ID from the PR body
-        RUN_ID=$(echo "$PR_BODY" | grep -o 'run_id=[0-9]*' | cut -d= -f2)
-        echo "Extracted RUN_ID: $RUN_ID"
-
-        if [ -z "$RUN_ID" ]; then
-          echo "Failed to extract RUN_ID from PR body"
-          exit 1
-        else
-          echo "run_id=$RUN_ID" >> $GITHUB_ENV
-          echo "::set-output name=run_id::$RUN_ID"
-        fi
-
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
