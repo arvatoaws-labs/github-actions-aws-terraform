@@ -209,37 +209,25 @@ jobs:
         tofu init -upgrade
     # Build or change infrastructure according to Tofu configuration files
 
-    - name: Download artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: lambda-zips
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        repository: ${{ github.repository }}
-        run-id: ${{ steps.get-run-id.outputs.run_id }}
-        path: lambda_zips_unzipped
-  
-    - name: Verify artifact contents
-      run: |
-        echo "Contents of lambda_zips_unzipped:"
-        ls -R lambda_zips_unzipped
-    
-    - name: Unzip Lambda Files
+    - name: Zip Lambda Directories
       run: |
         cd ${{ inputs.stack }}
-        mkdir -p lambda_zips_unzipped
-        
-        # Find and unzip all lambda zip files dynamically
-        find ../lambda_zips_unzipped -type f -name '*.zip' | while read zip_file; do
-          module_name=$(basename "$zip_file" .zip)
-          unzip -o "$zip_file" -d ".terraform/modules/$module_name"
-          echo "Unzipped $zip_file to .terraform/modules/$module_name"
+        find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
+          module_dir=$(dirname "$lambda_dir")
+          lambda_name=$(basename "$module_dir")
+          zip -r "$module_dir/lambda.zip" "$lambda_dir"
+          echo "Zipped $lambda_dir to $module_dir/lambda.zip"
         done
     
-        # Verify contents of each module directory
+        # Verify contents of each module directory after zipping
         find .terraform/modules -mindepth 1 -maxdepth 1 -type d | while read dir; do
           echo "Contents of $dir:"
           ls -l "$dir"
         done
+  
+    - name: Verify Lambda ZIPs
+      run: |
+        find ${{ inputs.stack }}/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
 
     - name: Tofu Apply
       id: apply
