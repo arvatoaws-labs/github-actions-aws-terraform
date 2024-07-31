@@ -30,7 +30,7 @@ on:
 
 jobs:
   check-changes:
-    runs-on: arvato
+    runs-on: ubuntu-latest
     outputs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
@@ -78,7 +78,7 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.stack_changed == 'true'
     name: 'Apply Tofu'
-    runs-on: arvato
+    runs-on: ubuntu-latest
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
     permissions:
@@ -291,7 +291,7 @@ jobs:
   logging:
     name: 'Save logs'
     needs: tofu
-    runs-on: arvato
+    runs-on: ubuntu-latest
     if: always() # This job will always run
     permissions:
       actions: read
