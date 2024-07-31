@@ -176,7 +176,17 @@ jobs:
         find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
           module_dir=$(dirname "$lambda_dir")
           zip_name="$module_dir/lambda.zip"
-          cd "$lambda_dir" && zip -r "$zip_name" * && cd - > /dev/null
+          
+          # Ensure the target directory exists
+          mkdir -p "$module_dir"
+    
+          # Create the zip file
+          cd "$lambda_dir"
+          zip -r "../../lambda.zip" ./*
+          cd - > /dev/null
+    
+          # Move the zip file to the correct location
+          mv "../../lambda.zip" "$zip_name"
           echo "Zipped contents of $lambda_dir to $zip_name"
         done
     
