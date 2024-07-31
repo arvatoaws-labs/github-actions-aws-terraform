@@ -179,14 +179,12 @@ jobs:
           
           # Ensure the target directory exists
           mkdir -p "$module_dir"
-    
-          # Create the zip file
+      
+          # Create the zip file in the correct location
           cd "$lambda_dir"
-          zip -r "../../lambda.zip" ./*
+          zip -r "$zip_name" ./*
           cd - > /dev/null
-    
-          # Move the zip file to the correct location
-          mv "../../lambda.zip" "$zip_name"
+          
           echo "Zipped contents of $lambda_dir to $zip_name"
         done
     
