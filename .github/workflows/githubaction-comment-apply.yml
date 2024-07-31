@@ -185,6 +185,14 @@ jobs:
           echo "Contents of $dir:"
           ls -l "$dir"
         done
+
+    - name: Verify Lambda ZIPs Contents
+      run: |
+        cd ${{ inputs.stack }}
+        for zip in $(find .terraform/modules -type f -name 'lambda.zip'); do
+          echo "Checking contents of $zip:"
+          unzip -l "$zip"
+        done
   
     - name: Verify Lambda ZIPs
       run: |
