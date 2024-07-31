@@ -128,15 +128,6 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
-    - name: Verify GH_TOKEN
-      run: |
-        if [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
-          echo "GITHUB_TOKEN is not set"
-          exit 1
-        else
-          echo "GITHUB_TOKEN is set"
-        fi
-
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/terraform-validate@v1
