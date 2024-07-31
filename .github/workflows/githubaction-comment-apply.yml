@@ -175,9 +175,9 @@ jobs:
         cd ${{ inputs.stack }}
         find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
           module_dir=$(dirname "$lambda_dir")
-          lambda_name=$(basename "$module_dir")
-          cd "$lambda_dir" && zip -r "../../lambda.zip" * && cd -
-          echo "Zipped contents of $lambda_dir to $module_dir/lambda.zip"
+          zip_name="$module_dir/lambda.zip"
+          cd "$lambda_dir" && zip -r "$zip_name" * && cd - > /dev/null
+          echo "Zipped contents of $lambda_dir to $zip_name"
         done
     
         # Verify contents of each module directory after zipping
