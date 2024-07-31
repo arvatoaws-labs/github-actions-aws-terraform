@@ -170,23 +170,31 @@ jobs:
         tofu init -upgrade
     # Build or change infrastructure according to Tofu configuration files
 
-    - name: Zip Lambda Directories
+    - name: Debugging and Zip Lambda Directories
       run: |
         cd ${{ inputs.stack }}
+        echo "Current directory: $(pwd)"
+        echo "Listing .terraform/modules contents:"
+        find .terraform/modules -type d
+    
         find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
           module_dir=$(dirname "$lambda_dir")
           zip_name="$module_dir/lambda.zip"
           
-          # Ensure the target directory exists
-          mkdir -p "$module_dir"
-      
-          # Create the zip file in the correct location
-          cd "$lambda_dir"
-          zip -r "$zip_name" ./*
-          cd - > /dev/null
-          
-          echo "Zipped contents of $lambda_dir to $zip_name"
+          echo "Processing $lambda_dir"
+          if [ -d "$lambda_dir" ]; then
+            echo "Found directory $lambda_dir, preparing to zip contents into $zip_name"
+            cd "$lambda_dir"
+            zip -r "$zip_name" ./*
+            cd - > /dev/null
+            echo "Zipped contents of $lambda_dir into $zip_name"
+          else
+            echo "Directory $lambda_dir does not exist, skipping."
+          fi
         done
+    
+        echo "Post-zipping directory contents:"
+        find .terraform/modules -type f -name 'lambda.zip'
     
         # Verify contents of each module directory after zipping
         find .terraform/modules -mindepth 1 -maxdepth 1 -type d | while read dir; do
