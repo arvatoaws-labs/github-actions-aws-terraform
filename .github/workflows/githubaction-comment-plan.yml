@@ -1,8 +1,8 @@
 name: 'TofuPlan'
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
   workflow_call:
     inputs:
       region:
@@ -30,12 +30,11 @@ jobs:
     name: 'Plan Tofu'
     runs-on: arvato
     outputs:
-      run_id: ${{ steps.save-run-id.outputs.run_id }}
       output1: ${{ steps.job.outputs.job_id }}
     permissions:
       actions: read
       id-token: write
-      contents: write
+      contents: read
       pull-requests: write
     defaults:
       run:
@@ -44,10 +43,6 @@ jobs:
     steps:
     - name: Get PR number
       run: echo ${{ inputs.github_event_number }}
-
-    - name: Save run ID
-      id: save-run-id
-      run: echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
     - uses: ReeganExE/github-action-job-id@v1.0
     - name: Job ID output
@@ -134,41 +129,6 @@ jobs:
         done
         # Execute the dynamically generated tofu command
         eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
-
-    # - name: Discover and Generate Lambda ZIPs
-    #   run: |
-    #     mkdir -p $(pwd)/lambda_zips
-    #     find $(pwd) -type d -name 'lambda' | while read -r lambda_dir; do
-    #       zip_file="$(pwd)/lambda_zips/$(basename "$(dirname "$lambda_dir")").zip"
-    #       echo "Generating $zip_file from $lambda_dir"
-    #       if [ -d "$lambda_dir" ]; then
-    #         (cd "$lambda_dir" && zip -r "$zip_file" .)
-    #       else
-    #         echo "Directory $lambda_dir does not exist"
-    #       fi
-    #     done
-  
-    # - name: Upload Lambda ZIPs as Artifacts
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: lambda-zips
-    #     path: lambda_zips/*.zip
-
-    # - name: Update PR with Run ID
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   run: |
-    #     PR_NUMBER=${{ inputs.github_event_number }}
-    #     RUN_ID=${{ steps.save-run-id.outputs.run_id }}
-    #     PR_BODY=$(gh pr view $PR_NUMBER --json body --jq '.body')
-    #     UPDATED_PR_BODY=$(echo "$PR_BODY" | sed '/run_id=/d')
-    #     UPDATED_PR_BODY="${UPDATED_PR_BODY}\nrun_id=${RUN_ID}"
-    #     echo "Updating PR #$PR_NUMBER with run_id=$RUN_ID"
-    #     curl -X PATCH \
-    #       -H "Authorization: token $GITHUB_TOKEN" \
-    #       -H "Content-Type: application/json" \
-    #       -d "{\"body\":\"$(echo "$UPDATED_PR_BODY" | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')\"}" \
-    #       https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER
 
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |

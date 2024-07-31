@@ -204,8 +204,6 @@ jobs:
       continue-on-error: true
       run: |
         cd ${{ inputs.stack }}
-        pwd
-        ls -R
         tofu apply -input=false -no-color tfplan
     # Upload the plan to S3
     - name: Upload Plan to S3
