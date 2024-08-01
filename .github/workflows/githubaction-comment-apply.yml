@@ -184,9 +184,8 @@ jobs:
           echo "Processing $lambda_dir"
           if [ -d "$lambda_dir" ]; then
             echo "Found directory $lambda_dir, preparing to zip contents into $zip_name"
-            mkdir -p "$module_dir"
             
-            # Ensure the module directory is writable
+            # Check if the directory is writable
             if [ ! -w "$module_dir" ]; then
               echo "Cannot write to $module_dir, skipping."
               continue
