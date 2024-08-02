@@ -176,15 +176,17 @@ jobs:
         find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
           module_dir=$(dirname "$lambda_dir")
           zip_name="$module_dir/lambda.zip"
-          
+
           echo "Processing directory $lambda_dir"
           echo "Target zip file: $zip_name"
-          
+
+          # Navigate to the parent directory of the lambda folder
+          cd "$module_dir"
           # Zip the contents of the lambda directory
-          cd "$lambda_dir"
-          zip -r "$zip_name" ./*
+          zip -r "lambda.zip" "lambda"
+          # Move back to the dev directory
           cd - > /dev/null
-          
+
           echo "Zipped contents of $lambda_dir to $zip_name"
         done
       
