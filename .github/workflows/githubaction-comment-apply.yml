@@ -180,11 +180,11 @@ jobs:
           echo "Processing directory $lambda_dir"
           echo "Target zip file: $zip_name"
 
-          # Navigate to the parent directory of the lambda folder
-          cd "$module_dir"
-          # Zip the contents of the lambda directory
-          zip -r "lambda.zip" "lambda"
-          # Move back to the dev directory
+          # Navigate to the lambda directory
+          cd "$lambda_dir"
+          # Create a zip file of the contents of the lambda directory, not including the directory itself
+          zip -r "$zip_name" ./*
+          # Move back to the original directory
           cd - > /dev/null
 
           echo "Zipped contents of $lambda_dir to $zip_name"
