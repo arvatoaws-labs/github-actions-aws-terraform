@@ -182,12 +182,9 @@ jobs:
           
           # Zip the contents of the lambda directory
           cd "$lambda_dir"
-          zip -r "../lambda.zip" ./*
+          zip -r "$zip_name" ./*
           cd - > /dev/null
           
-          # Move the zip file to the correct location
-          mv "$lambda_dir/../lambda.zip" "$zip_name"
-        
           echo "Zipped contents of $lambda_dir to $zip_name"
         done
       
