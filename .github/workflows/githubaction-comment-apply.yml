@@ -176,19 +176,25 @@ jobs:
         find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
           module_dir=$(dirname "$lambda_dir")
           zip_name="$module_dir/lambda.zip"
-    
-          # Zip the contents of the lambda directory
+
+          # Zip the contents of the lambda directory without including the directory itself
           cd "$lambda_dir"
-          zip -r "$zip_name" ./*
+          zip -r "$module_dir/lambda.zip" ./*
           cd - > /dev/null
-    
+
           echo "Zipped contents of $lambda_dir to $zip_name"
         done
-    
+
         # Verify contents of each module directory after zipping
         find .terraform/modules -mindepth 1 -maxdepth 1 -type d | while read dir; do
           echo "Contents of $dir:"
           ls -l "$dir"
+        done
+
+        # Verify the contents of the zip files
+        find .terraform/modules -type f -name 'lambda.zip' | while read zip_file; do
+          echo "Checking contents of $zip_file:"
+          unzip -l "$zip_file"
         done
 
     - name: Verify Lambda ZIPs Contents
