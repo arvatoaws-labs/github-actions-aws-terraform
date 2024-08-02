@@ -172,45 +172,18 @@ jobs:
 
     - name: Zip Lambda Directories
       run: |
-        cd ${{ inputs.stack }}
-        echo "Current directory: $(pwd)"
-        echo "Listing contents of .terraform/modules:"
-        find .terraform/modules -type d
-    
-        # Find directories named 'lambda' and zip their contents
-        find .terraform/modules -type d -name 'lambda' | while read lambda_dir; do
+        cd dev
+        find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
           module_dir=$(dirname "$lambda_dir")
           zip_name="$module_dir/lambda.zip"
-          
-          echo "Processing directory $lambda_dir"
-          echo "Target zip file: $zip_name"
     
-          # Check if the lambda directory exists and contains files
-          if [ -d "$lambda_dir" ]; then
-            cd "$lambda_dir"
-            echo "Inside $lambda_dir"
-            ls -la
+          # Zip the contents of the lambda directory
+          cd "$lambda_dir"
+          zip -r "$zip_name" ./*
+          cd - > /dev/null
     
-            # Check if the directory is empty
-            if [ "$(ls -A)" ]; then
-              zip -r "$zip_name" ./*
-              if [ $? -eq 0 ]; then
-                echo "Successfully zipped contents of $lambda_dir to $zip_name"
-              else
-                echo "Failed to zip contents of $lambda_dir"
-              fi
-            else
-              echo "Directory $lambda_dir is empty, skipping."
-            fi
-    
-            cd - > /dev/null
-          else
-            echo "Directory $lambda_dir does not exist or is not accessible, skipping."
-          fi
+          echo "Zipped contents of $lambda_dir to $zip_name"
         done
-    
-        echo "Listing resulting zip files:"
-        find .terraform/modules -type f -name 'lambda.zip'
     
         # Verify contents of each module directory after zipping
         find .terraform/modules -mindepth 1 -maxdepth 1 -type d | while read dir; do
