@@ -28,7 +28,6 @@ on:
         type: string
         default: "."
 
-
 jobs:
   check-changes:
     runs-on: ubuntu-latest
@@ -36,7 +35,7 @@ jobs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Important to fetch all history for branches
     - name: Check for changes in the stack based on input
@@ -141,6 +140,7 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt-check@v1
       with:
@@ -169,6 +169,47 @@ jobs:
         rm -rf .terraform .terraform.lock.hcl
         tofu init -upgrade
     # Build or change infrastructure according to Tofu configuration files
+
+    - name: Zip Lambda Directories
+      run: |
+        cd ${{ inputs.stack }}
+        find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
+          module_dir=$(dirname "$lambda_dir")
+          zip_name="$module_dir/lambda.zip"
+          temp_zip_name="/tmp/$(basename "$module_dir").zip"
+
+          echo "Processing directory $lambda_dir"
+          echo "Target zip file: $zip_name"
+
+          # Create a temporary zip file in /tmp directory
+          cd "$lambda_dir"
+          zip -r "$temp_zip_name" ./*
+          cd - > /dev/null
+
+          # Move the temporary zip file to the desired location
+          mv "$temp_zip_name" "$zip_name"
+
+          echo "Zipped contents of $lambda_dir to $zip_name"
+        done
+      
+        # Verify contents of each module directory after zipping
+        find .terraform/modules -mindepth 1 -maxdepth 1 -type d | while read dir; do
+          echo "Contents of $dir:"
+          ls -l "$dir"
+        done
+
+    - name: Verify Lambda ZIPs Contents
+      run: |
+        cd ${{ inputs.stack }}
+        for zip in $(find .terraform/modules -type f -name 'lambda.zip'); do
+          echo "Checking contents of $zip:"
+          unzip -l "$zip"
+        done
+  
+    - name: Verify Lambda ZIPs
+      run: |
+        find ${{ inputs.stack }}/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
+
     - name: Tofu Apply
       id: apply
       continue-on-error: true
@@ -251,6 +292,12 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d @comment3.txt
+          
+    # Cleanup lambda.zip files
+    # - name: Cleanup lambda.zip Files
+    #   run: |
+    #     find . -type f -name 'lambda.zip' -delete
+
 
   logging:
     name: 'Save logs'
