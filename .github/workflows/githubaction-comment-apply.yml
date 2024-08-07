@@ -172,7 +172,7 @@ jobs:
 
     - name: Zip Lambda Directories
       run: |
-        cd dev
+        cd ${{ inputs.stack }}
         find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
           module_dir=$(dirname "$lambda_dir")
           zip_name="$module_dir/lambda.zip"
@@ -294,9 +294,9 @@ jobs:
           -d @comment3.txt
           
     # Cleanup lambda.zip files
-    - name: Cleanup lambda.zip Files
-      run: |
-        find . -type f -name 'lambda.zip' -delete
+    # - name: Cleanup lambda.zip Files
+    #   run: |
+    #     find . -type f -name 'lambda.zip' -delete
 
 
   logging:
