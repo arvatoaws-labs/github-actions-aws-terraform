@@ -44,6 +44,7 @@ jobs:
     - name: Get PR number
       run: echo ${{ inputs.github_event_number }}
 
+    # Expose and capture the job ID of the current job
     - uses: ReeganExE/github-action-job-id@v1.0
     - name: Job ID output
       id: job
@@ -51,6 +52,7 @@ jobs:
         echo ${GH_JOB_0_ID}
         echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
 
+    # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -58,6 +60,7 @@ jobs:
         role-to-assume: ${{ inputs.roleArn }}
         role-session-name: GitHubTerraformDeployment
 
+    # Get the github token with access to the relevant repositories from the app
     - name: Generate token
       id: generate-token
       uses: tibdex/github-app-token@v2
@@ -65,10 +68,12 @@ jobs:
         app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
+    # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
+    # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v4
       with:
@@ -88,7 +93,6 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/terraform-fmt-check@v1
       with:
@@ -120,8 +124,10 @@ jobs:
         COMMAND="tofu plan -input=false -no-color -out=tfplan"
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
+        # Loop over each secret in the GitHub Actions environment
         for key in $SECRETS; do
           value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
+          # Check if the secret name has the prefix "TF_VAR_"
           if [[ $key == TF_VAR_* ]]; then
             # Add the secret as an input variable to the tofu command
             COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
@@ -130,11 +136,14 @@ jobs:
         # Execute the dynamically generated tofu command
         eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
+    # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
         cd ${{ inputs.stack }}
         aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
+    # CONCLUDE
+    # Post a comment with the plan outputs and add the 'planned' label
     - name: Post Plan to GitHub PR
       env:
         COMMENT: ${{ inputs.github_event_issue_comments_url }}
@@ -172,12 +181,14 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    # Assume the role in AWS to upload the logs
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
 
+    # Save previous job logs and upload to s3
     - name: Retrieve log file and upload to s3
       run: |
         TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
@@ -188,4 +199,3 @@ jobs:
         aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
