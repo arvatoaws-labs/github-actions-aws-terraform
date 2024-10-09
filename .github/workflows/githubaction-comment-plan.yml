@@ -83,7 +83,7 @@ jobs:
 
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/terraform-validate@v1
+      uses: dflook/tofu-validate@v1
       with:
         path: ${{ inputs.stack }}
       env:
@@ -94,7 +94,7 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt ${{ inputs.stack }}
-      uses: dflook/terraform-fmt-check@v1
+      uses: dflook/tofu-fmt-check@v1
       with:
         path: ${{ inputs.stack }}
       env:
