@@ -61,12 +61,12 @@ jobs:
         role-session-name: GitHubTerraformDeployment
 
     # Get the github token with access to the relevant repositories from the app
-    #- name: Generate token
-    #  id: generate-token
-    #  uses: tibdex/github-app-token@v2
-    #  with:
-    #    app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-    #    private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+    - name: Generate token
+      id: generate-token
+      uses: tibdex/github-app-token@v2
+      with:
+        app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
     - name: Generate GitHub App Token with Python for Arvatoaws
       id: generate-token-aws
@@ -141,10 +141,10 @@ jobs:
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        # GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        # TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        # GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        # GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt ${{ inputs.stack }}
       uses: dflook/tofu-fmt-check@v1
       with:
@@ -152,10 +152,10 @@ jobs:
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        # GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        # TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        # GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        # GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
     # Install the latest version of Tofu CLI
     - name: Setup Tofu
