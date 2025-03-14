@@ -1,0 +1,384 @@
+name: 'TofuApply'
+
+on:
+  issue_comment:
+    types: [created]
+  workflow_call:
+    inputs:
+      region:
+        required: true
+        type: string
+      roleArn:
+        required: true
+        type: string
+      s3bucketName:
+        required: true
+        type: string
+      github_event_number:
+        required: true
+        type: string
+      github_event_issue_comments_url:
+        required: true
+        type: string
+      github_event_repository_url:
+        required: true
+        type: string
+      stack:
+        required: false
+        type: string
+        default: "."
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      stack_changed: ${{ steps.filter.outputs.stack_changed }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Important to fetch all history for branches
+    - name: Check for changes in the stack based on input
+      id: filter
+      run: |
+        STACK_DIR=${{ inputs.stack }}
+        echo "Checking for changes in the $STACK_DIR directory..."
+
+        PR_NUMBER=$(echo ${{ github.event.issue.pull_request.url }} | grep -o '[^/]*$')
+
+        HEAD_SHA=$(gh pr view $PR_NUMBER --json headRefOid -q .headRefOid)
+        BASE_BRANCH=$(gh pr view $PR_NUMBER --json baseRefName -q .baseRefName)
+
+        # Ensure correct repo syntax for GH API call
+        REPO="${{ github.repository }}"
+        BASE_SHA=$(gh api repos/$REPO/commits/$BASE_BRANCH --jq '.sha')
+
+        echo "Base branch latest commit SHA: $BASE_SHA, PR head commit SHA: $HEAD_SHA"
+
+        if git diff --name-only $BASE_SHA $HEAD_SHA | grep -q "^${STACK_DIR}/"; then
+          echo "Changes detected in the $STACK_DIR directory."
+          echo "stack_changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "No changes detected in the $STACK_DIR directory."
+          echo "stack_changed=false" >> $GITHUB_OUTPUT
+        fi
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      shell: bash
+    - name: Set output
+      run: |
+        echo "Final stack_changed value: ${{ env.stack_changed }}"
+        echo "stack_changed=${{ env.stack_changed }}" >> $GITHUB_OUTPUT
+    - name: Debug stack_changed output
+      run: |
+        echo "stack_changed set to: ${{ steps.filter.outputs.stack_changed }}"
+      if: always()
+
+  tofu:
+    needs: check-changes
+    if: needs.check-changes.outputs.stack_changed == 'true'
+    name: 'Apply Tofu'
+    runs-on: ubuntu-latest
+    outputs:
+      output1: ${{ steps.job.outputs.job_id }}
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    # Expose and capture the job ID of the current job
+    - uses: ReeganExE/github-action-job-id@v1.0
+    - name: Job ID output
+      id: job
+      run: |
+        echo ${GH_JOB_0_ID}
+        echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
+
+    # Assume the role in AWS to roll out the changes
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ inputs.roleArn }}
+        role-session-name: GitHubTerraformDeployment
+
+    # Get the github token with access to the relevant repositories from the app
+    #- name: Generate token
+    #  id: generate-token
+    #  uses: tibdex/github-app-token@v2
+    #  with:
+    #    app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+    #    private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
+
+    - name: Generate GitHub App Token with Python for Arvatoaws
+      id: generate-token-aws
+      run: |
+        python3 - <<EOF
+        import jwt
+        import time
+        import os
+        import requests
+      
+        # App settings
+        app_id = 1088714  # Fixed constant
+        private_key = os.getenv("PRIVATE_KEY")
+        installation_id = os.getenv("INSTALLATION_ID")
+      
+        if not private_key:
+            raise ValueError("PRIVATE_KEY is not set")
+        if not installation_id:
+            raise ValueError("INSTALLATION_ID is not set")
+      
+        # Create JWT payload
+        payload = {
+            "iat": int(time.time()),  # Issued at time
+            "exp": int(time.time()) + (10 * 60),  # Expires in 10 minutes
+            "iss": app_id,
+        }
+      
+        # Generate the JWT
+        jwt_token = jwt.encode(payload, private_key, algorithm="RS256")
+      
+        # Build the request URL
+        url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
+      
+        # Make the POST request
+        headers = {
+            "Authorization": f"Bearer {jwt_token}",
+            "Accept": "application/vnd.github+json",
+        }
+        response = requests.post(url, headers=headers)
+      
+        # Check the response
+        if response.status_code != 201:
+            raise ValueError(f"Failed to fetch token: {response.status_code} {response.text}")
+      
+        # Extract the token
+        access_token = response.json()["token"]
+        print(f"::set-output name=access_token::{access_token}")
+        EOF
+      env:
+        PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        INSTALLATION_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+
+    # Configure github access
+    - uses: de-vri-es/setup-git-credentials@v2
+      with:
+        credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
+
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: refs/pull/${{ inputs.github_event_number }}/merge
+    - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+      shell: bash
+
+    # Terraform Validation Steps
+    - name: terraform validate ${{ inputs.stack }}
+      uses: dflook/tofu-validate@v1
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
+    - name: terraform fmt ${{ inputs.stack }}
+      uses: dflook/tofu-fmt-check@v1
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
+    # Download the plan from S3
+    - name: Download Plan from S3
+      run: |
+        cd ${{ inputs.stack }}
+        aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
+
+    # Install the latest version of Tofu CLI
+    - name: Setup Tofu
+      uses: opentofu/setup-opentofu@v1
+    # Initialize Terraform
+    - name: Tofu Init
+      run: |
+        cd ${{ inputs.stack }}
+        rm -rf .terraform .terraform.lock.hcl
+        tofu init -upgrade
+    # Build or change infrastructure according to Tofu configuration files
+
+    - name: Zip Lambda Directories
+      run: |
+        cd ${{ inputs.stack }}
+        find .terraform/modules -mindepth 2 -maxdepth 2 -type d -name 'lambda' | while read lambda_dir; do
+          module_dir=$(dirname "$lambda_dir")
+          zip_name="$module_dir/lambda.zip"
+          temp_zip_name="/tmp/$(basename "$module_dir").zip"
+
+          echo "Processing directory $lambda_dir"
+          echo "Target zip file: $zip_name"
+
+          # Create a temporary zip file in /tmp directory
+          cd "$lambda_dir"
+          zip -r "$temp_zip_name" ./*
+          cd - > /dev/null
+
+          # Move the temporary zip file to the desired location
+          mv "$temp_zip_name" "$zip_name"
+
+          echo "Zipped contents of $lambda_dir to $zip_name"
+        done
+      
+        # Verify contents of each module directory after zipping
+        find .terraform/modules -mindepth 1 -maxdepth 1 -type d | while read dir; do
+          echo "Contents of $dir:"
+          ls -l "$dir"
+        done
+
+    - name: Verify Lambda ZIPs Contents
+      run: |
+        cd ${{ inputs.stack }}
+        for zip in $(find .terraform/modules -type f -name 'lambda.zip'); do
+          echo "Checking contents of $zip:"
+          unzip -l "$zip"
+        done
+  
+    - name: Verify Lambda ZIPs
+      run: |
+        find ${{ inputs.stack }}/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
+
+    - name: Tofu Apply
+      id: apply
+      continue-on-error: true
+      run: |
+        cd ${{ inputs.stack }}
+        tofu apply -input=false -no-color tfplan
+    # Upload the plan to S3
+    - name: Upload Plan to S3
+      run: |
+        cd ${{ inputs.stack }}
+        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
+
+    # CONCLUDE
+    # If the apply was successful, post a comment with the applied output
+    - name: Post Plan and Apply to GitHub PR
+      if: steps.apply.outcome == 'success'
+      env:
+        URL: ${{ inputs.github_event_issue_comments_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd ${{ inputs.stack }}
+        (printf "**Tofu Apply ${{ inputs.stack }} environment**\n\n\`\`\`" && echo -n '${{ steps.apply.outputs.stdout }}' && printf "\`\`\`\n\n") > comment.txt
+        jq -R -s '.' < comment.txt > comment2.txt
+        truncate -s -1 comment2.txt
+        (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
+        curl \
+          -X POST \
+          $URL \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d @comment3.txt
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d '["applied"]'
+
+    # If the apply was successful, merge the branch into the main
+    # commented out for testing, eventually one of the solution for fixing fails and merging in multiple environments is disabling auto-merge
+    # - name: Merge into main
+    #   if: steps.apply.outcome == 'success'
+    #   env:
+    #     URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   run: |
+    #     cd ${{ inputs.stack }}
+    #     curl \
+    #     -X PUT \
+    #     $URL \
+    #     -H "Content-Type: application/json" \
+    #     -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+    #     -d '{"commit_title":"Tofu update applied"}'
+
+    # remove the organization plan from S3 whether successful or not
+    - name: Delete Plan from S3
+      run: |
+        cd ${{ inputs.stack }}
+        aws s3 rm --recursive s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}
+
+    # If the apply failed, post the errors
+    - name: Post Organization Apply Failure
+      if: steps.apply.outcome == 'failure'
+      env:
+        URL: ${{ inputs.github_event_issue_comments_url }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd ${{ inputs.stack }}
+        (printf "Apply failed for ${{ inputs.stack }} environment:\n\n**Standard Output:**\n\n\`\`\`" && 
+        echo -n '${{ steps.apply.outputs.stdout }}' &&
+        printf "\`\`\`\n\n**Error Output:**\n\n\`\`\`" &&
+        echo -n '${{ steps.apply.outputs.stderr }}' &&
+        printf "\`\`\`\n\n") > comment.txt
+        jq -R -s '.' < comment.txt > comment2.txt
+        truncate -s -1 comment2.txt
+        (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
+        curl \
+          -X POST \
+          $URL \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d @comment3.txt
+          
+    # Cleanup lambda.zip files
+    # - name: Cleanup lambda.zip Files
+    #   run: |
+    #     find . -type f -name 'lambda.zip' -delete
+
+
+  logging:
+    name: 'Save logs'
+    needs: tofu
+    runs-on: ubuntu-latest
+    if: always() # This job will always run
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Assume the role in AWS to upload the logs
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ inputs.roleArn }}
+
+    # Save previous job logs and upload to s3
+    - name: Retrieve log file and upload to s3
+      run: |
+        TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
+        LOG_FILENAME="TofuApply_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+        # Get log file
+        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.tofu.outputs.output1 }}/logs > $LOG_FILENAME
+        # Upload it to s3
+        aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Apply/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
