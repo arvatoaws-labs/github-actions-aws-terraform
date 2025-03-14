@@ -78,7 +78,7 @@ jobs:
         import requests
       
         # App settings
-        app_id = 1088714  # Fixed constant
+        app_id = os.getenv("APP_ID")
         private_key = os.getenv("PRIVATE_KEY")
         installation_id = os.getenv("INSTALLATION_ID")
       
@@ -117,7 +117,8 @@ jobs:
         EOF
       env:
         PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        INSTALLATION_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        INSTALLATION_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_INSTALLATION_ID }}
      
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
