@@ -115,59 +115,6 @@ jobs:
         app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-
-    - name: Generate GitHub App Token with Python for Arvatoaws
-      id: generate-token-aws
-      run: |
-        python3 - <<EOF
-        import jwt
-        import time
-        import os
-        import requests
-      
-        # App settings
-        app_id = os.getenv("APP_ID")
-        private_key = os.getenv("PRIVATE_KEY")
-        installation_id = os.getenv("INSTALLATION_ID")
-      
-        if not private_key:
-            raise ValueError("PRIVATE_KEY is not set")
-        if not installation_id:
-            raise ValueError("INSTALLATION_ID is not set")
-      
-        # Create JWT payload
-        payload = {
-            "iat": int(time.time()),  # Issued at time
-            "exp": int(time.time()) + (10 * 60),  # Expires in 10 minutes
-            "iss": app_id,
-        }
-      
-        # Generate the JWT
-        jwt_token = jwt.encode(payload, private_key, algorithm="RS256")
-      
-        # Build the request URL
-        url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
-      
-        # Make the POST request
-        headers = {
-            "Authorization": f"Bearer {jwt_token}",
-            "Accept": "application/vnd.github+json",
-        }
-        response = requests.post(url, headers=headers)
-      
-        # Check the response
-        if response.status_code != 201:
-            raise ValueError(f"Failed to fetch token: {response.status_code} {response.text}")
-      
-        # Extract the token
-        access_token = response.json()["token"]
-        print(f"::set-output name=access_token::{access_token}")
-        EOF
-      env:
-        PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        INSTALLATION_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_INSTALLATION_ID }}
-
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
