@@ -87,6 +87,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
+        OPENTOFU_VERSION: 1.9.0
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -98,6 +99,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
+        OPENTOFU_VERSION: 1.9.0
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -118,6 +120,8 @@ jobs:
     - name: Tofu Plan ${{ inputs.stack }}
       id: tfplan
       continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         cd ${{ inputs.stack }}
         # Bash script to build tofu plan command dynamically
