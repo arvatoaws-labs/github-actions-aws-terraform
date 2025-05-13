@@ -149,6 +149,7 @@ jobs:
         directory: ${{ inputs.stack }}
         file: ${{ inputs.stack }}/tfplan
         output_format: sarif
+        
         soft_fail: true
         output_file_path: console,results.sarif
       env:
@@ -162,7 +163,8 @@ jobs:
         # when the previous one has failed. Security checks that do not pass will 'fail'.
         # An alternative is to add `continue-on-error: true` to the previous step
         # Or 'soft_fail: true' to checkov.
-      if: success() || failure()
+      if: failure() 
+      # success() || failure()
       with:
         sarif_file: results.sarif
 
