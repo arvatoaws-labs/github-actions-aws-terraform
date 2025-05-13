@@ -148,10 +148,10 @@ jobs:
         framework: 'terraform'
         directory: ${{ inputs.stack }}
         file: ${{ inputs.stack }}/tfplan
-        output_format: sarif
-        
+        output_format: github_failed_only
+        quiet: true
         soft_fail: true
-        output_file_path: console,results.sarif
+        output_file_path: results.sarif
       env:
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
@@ -163,8 +163,7 @@ jobs:
         # when the previous one has failed. Security checks that do not pass will 'fail'.
         # An alternative is to add `continue-on-error: true` to the previous step
         # Or 'soft_fail: true' to checkov.
-      if: failure() 
-      # success() || failure()
+      if: success() || failure()
       with:
         sarif_file: results.sarif
 
