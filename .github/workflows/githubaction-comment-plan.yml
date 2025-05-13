@@ -146,8 +146,9 @@ jobs:
       uses: bridgecrewio/checkov-action@v12.1347.0
       with:
         framework: 'terraform'
+        directory: ${{ inputs.stack }}
         file: ${{ inputs.stack }}/tfplan
-        output_format: 'cli,sarif'
+        output_format: sarif,cli
         soft_fail: true
         output_file_path: console,results.sarif
       env:
