@@ -140,6 +140,18 @@ jobs:
         # Execute the dynamically generated tofu command
         eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
+    # Checkov Scan
+    - name: Checkov Scan
+      id: checkov
+      uses: bridgecrewio/checkov-action@v12.1347.0
+      with:
+        framework: 'terraform'
+        file: ${{ inputs.stack }}/tfplan
+        output_format: 'json'
+        soft_fail: true
+      env:
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
