@@ -148,7 +148,7 @@ jobs:
         framework: 'terraform'
         directory: ${{ inputs.stack }}
         file: ${{ inputs.stack }}/tfplan
-        output_format: sarif,cli
+        output_format: sarif
         soft_fail: true
         output_file_path: console,results.sarif
       env:
