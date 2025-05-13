@@ -147,10 +147,38 @@ jobs:
       with:
         framework: 'terraform'
         file: ${{ inputs.stack }}/tfplan
-        output_format: 'json'
+        output_format: 'cli,sarif'
         soft_fail: true
+        output_file_path: console,results.sarif
       env:
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v3
+        
+        # Results are generated only on a success or failure
+        # this is required since GitHub by default won't run the next step
+        # when the previous one has failed. Security checks that do not pass will 'fail'.
+        # An alternative is to add `continue-on-error: true` to the previous step
+        # Or 'soft_fail: true' to checkov.
+      if: success() || failure()
+      with:
+        sarif_file: results.sarif
+
+    - name: Run Trivy vulnerability scanner in IaC mode
+      uses: aquasecurity/trivy-action@0.29.0
+      with:
+        scan-type: 'config'
+        hide-progress: true
+        format: 'sarif'
+        output: 'trivy-results-config.sarif'
+        # exit-code: '1' # Break if vulnerabilities found
+        ignore-unfixed: true
+        severity: 'CRITICAL,HIGH'
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results-config.sarif'
 
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
