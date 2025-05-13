@@ -148,7 +148,7 @@ jobs:
         framework: 'terraform'
         directory: ${{ inputs.stack }}
         file: ${{ inputs.stack }}/tfplan
-        output_format: github_failed_only
+        output_format: sarif
         quiet: true
         soft_fail: true
         output_file_path: results.sarif
