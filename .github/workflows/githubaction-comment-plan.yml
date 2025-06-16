@@ -122,10 +122,11 @@ jobs:
       continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TF_CLI_ARGS_plan: "-detailed-exitcode"
       run: |
         cd ${{ inputs.stack }}
         # Bash script to build tofu plan command dynamically
-        COMMAND="tofu plan -input=false -no-color -out=tfplan -detailed-exitcode"
+        COMMAND="tofu plan -input=false -no-color -out=tfplan"
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
         # Loop over each secret in the GitHub Actions environment
