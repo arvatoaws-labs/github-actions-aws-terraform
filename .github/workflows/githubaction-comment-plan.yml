@@ -110,6 +110,8 @@ jobs:
     # Install the latest version of Tofu CLI
     - name: Setup Tofu
       uses: opentofu/setup-opentofu@v1
+      with:
+        tofu_wrapper: false
     # Initialize Terraform
     - name: Tofu Init
       run: |
@@ -163,7 +165,7 @@ jobs:
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
         labels=("planned")
         echo "Detailed exit code: ${{steps.tfplan.outputs.detailed_exitcode}}"
-        if [ ${{steps.tfplan.outputs.detailed_exitcode}} eq 0 ]; then
+        if [ ${{steps.tfplan.outputs.detailed_exitcode}} -eq 0 ]; then
           labels+=("no changes")
         fi
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
