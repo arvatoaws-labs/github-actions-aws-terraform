@@ -139,10 +139,6 @@ jobs:
         done
         # Execute the dynamically generated tofu command
         eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
-
-    - name: Evaluate Changes
-      id: get-changes
-      run: |
         tofu show -no-color -json tfplan | jq '
           [ .resource_changes[]
             | select(
@@ -152,6 +148,19 @@ jobs:
               )
           ] | length'
         echo "detailed_exitcode=$?" >> $GITHUB_OUTPUT
+
+    # - name: Evaluate Changes
+    #   id: get-changes
+    #   run: |
+    #     tofu show -no-color -json tfplan | jq '
+    #       [ .resource_changes[]
+    #         | select(
+    #             (.change.actions | index("create")) or
+    #             (.change.actions | index("update")) or
+    #             (.change.actions | index("delete"))
+    #           )
+    #       ] | length'
+    #     echo "detailed_exitcode=$?" >> $GITHUB_OUTPUT
     # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
@@ -172,8 +181,8 @@ jobs:
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
         labels=("planned")
-        echo "Detailed exit code: ${{steps.get-changes.outputs.detailed_exitcode}}"
-        if [ ${{steps.get-changes.outputs.detailed_exitcode}} -eq 0 ]; then
+        echo "Detailed exit code: ${{steps.tfplan.outputs.detailed_exitcode}}"
+        if [ ${{steps.tfplan.outputs.detailed_exitcode}} -eq 0 ]; then
           labels+=("no changes")
         fi
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
