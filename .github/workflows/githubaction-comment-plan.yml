@@ -180,7 +180,7 @@ jobs:
           https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d '{"labels": $labels_final}'
+          -d '{"labels": "$labels_final"}'
 
   logging:
     name: 'Save logs'
