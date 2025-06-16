@@ -148,20 +148,6 @@ jobs:
               )
           ] | length')
         echo "changes=$number_of_changes" >> $GITHUB_OUTPUT
-
-    # - name: Evaluate Changes
-    #   id: get-changes
-    #   run: |
-    #     tofu show -no-color -json tfplan | jq '
-    #       [ .resource_changes[]
-    #         | select(
-    #             (.change.actions | index("create")) or
-    #             (.change.actions | index("update")) or
-    #             (.change.actions | index("delete"))
-    #           )
-    #       ] | length'
-    #     echo "detailed_exitcode=$?" >> $GITHUB_OUTPUT
-    # Upload the plan to S3
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
         cd ${{ inputs.stack }}
