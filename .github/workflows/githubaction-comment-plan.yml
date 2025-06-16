@@ -139,7 +139,7 @@ jobs:
         done
         # Execute the dynamically generated tofu command
         eval $COMMAND
-        echo "exitcode=$?" >> $GITHUB_OUTPUT
+        echo "detailed_exitcode=$?" >> $GITHUB_OUTPUT
         tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
     # Upload the plan to S3
@@ -162,8 +162,8 @@ jobs:
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
         labels=("planned")
-        echo "Detailed exit code: ${{steps.tfplan.outputs.exitcode}}"
-        if [ ${{steps.tfplan.outputs.exitcode}} eq 0 ]; then
+        echo "Detailed exit code: ${{steps.tfplan.outputs.detailed_exitcode}}"
+        if [ ${{steps.tfplan.outputs.detailed_exitcode}} eq 0 ]; then
           labels+=("no changes")
         fi
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
