@@ -83,7 +83,7 @@ jobs:
 
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/tofu-validate@v1
+      uses: dflook/tofu-validate@v2
       with:
         path: ${{ inputs.stack }}
       env:

@@ -49,7 +49,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/tofu-validate@v1
+      uses: dflook/tofu-validate@v2
       with:
         path: ${{ inputs.stack }}
       env:
