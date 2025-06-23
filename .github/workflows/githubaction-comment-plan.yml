@@ -139,8 +139,15 @@ jobs:
         done
         # Execute the dynamically generated tofu command
         eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
-
-    # Upload the plan to S3
+        number_of_changes=$(tofu show -no-color -json tfplan | jq '
+          [ .resource_changes[]
+            | select(
+                (.change.actions | index("create")) or
+                (.change.actions | index("update")) or
+                (.change.actions | index("delete"))
+              )
+          ] | length')
+        echo "changes=$number_of_changes" >> $GITHUB_OUTPUT
     - name: Upload ${{ inputs.stack }} Plan to S3
       run: |
         cd ${{ inputs.stack }}
@@ -159,6 +166,13 @@ jobs:
         jq -R -s '.' < comment.txt > comment2.txt
         truncate -s -1 comment2.txt
         (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
+        labels=("planned")
+        echo "Number of changes: ${{steps.tfplan.outputs.changes}}"
+        if [ ${{steps.tfplan.outputs.changes}} -eq 0 ]; then
+          labels+=("no changes")
+        fi
+        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
         curl \
           -X POST \
           $COMMENT \
@@ -170,7 +184,7 @@ jobs:
           https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d '["planned"]'
+          -d "{\"labels\": $labels_final}"
 
   logging:
     name: 'Save logs'
