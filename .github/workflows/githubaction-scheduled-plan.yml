@@ -37,10 +37,11 @@ jobs:
     # Get the github token with access to the relevant repositories from the app
     - name: Generate token
       id: generate-token
-      uses: tibdex/github-app-token@v2
+      uses: actions/create-github-app-token@v2
       with:
-        app_id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        private_key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        owner: arvatoaws
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
@@ -49,7 +50,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
     - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/tofu-validate@v1
+      uses: dflook/tofu-validate@v2
       with:
         path: ${{ inputs.stack }}
       env:
@@ -60,7 +61,7 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt ${{ inputs.stack }}
-      uses: dflook/tofu-fmt-check@v1
+      uses: dflook/tofu-fmt-check@v2
       with:
         path: ${{ inputs.stack }}
       env:

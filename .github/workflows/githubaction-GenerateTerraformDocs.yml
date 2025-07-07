@@ -53,7 +53,7 @@ jobs:
         output-method: inject
 
     - name: terraform fmt
-      uses: dflook/tofu-fmt@v1
+      uses: dflook/tofu-fmt@v2
       with:
         path: ${{ inputs.TF_CONFIG_DIR }}
 
