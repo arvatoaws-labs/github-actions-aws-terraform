@@ -145,7 +145,7 @@ jobs:
     # Checkov Scan
     - name: Checkov Scan
       id: checkov
-      uses: bridgecrewio/checkov-action
+      uses: bridgecrewio/checkov-action@master
       if: success() || failure()
       with:
         framework: 'terraform'
