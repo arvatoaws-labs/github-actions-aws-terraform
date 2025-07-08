@@ -94,18 +94,6 @@ jobs:
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: terraform fmt ${{ inputs.stack }}
-      uses: dflook/tofu-fmt-check@v1
-      with:
-        path: ${{ inputs.stack }}
-      env:
-        OPENTOFU_VERSION: 1.9.0
-        TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
     # Install the latest version of Tofu CLI
     - name: Setup Tofu
@@ -140,10 +128,25 @@ jobs:
         # Execute the dynamically generated tofu command
         eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
 
+    # Check Formatting
+    - name: terraform fmt ${{ inputs.stack }}
+      uses: dflook/tofu-fmt-check@v1
+      with:
+        path: ${{ inputs.stack }}
+      env:
+        OPENTOFU_VERSION: 1.9.0
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
     # Checkov Scan
     - name: Checkov Scan
       id: checkov
       uses: bridgecrewio/checkov-action@v12.1347.0
+      if: success() || failure()
       with:
         framework: 'terraform'
         directory: ${{ inputs.stack }}
@@ -158,6 +161,7 @@ jobs:
 
     # Check SARIF file size and compress if needed
     - name: Check and compress SARIF file
+      if: success() || failure()
       run: |
         if [ -f "results.sarif" ]; then
           SIZE=$(stat -f%z "results.sarif" 2>/dev/null || stat -c%s "results.sarif" 2>/dev/null || echo 0)
@@ -186,6 +190,7 @@ jobs:
 
     - name: Run Trivy vulnerability scanner in IaC mode
       uses: aquasecurity/trivy-action@0.29.0
+      if: success() || failure()
       with:
         scan-type: 'config'
         hide-progress: true
