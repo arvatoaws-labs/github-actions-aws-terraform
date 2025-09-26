@@ -255,19 +255,19 @@ jobs:
 
     # If the apply was successful, merge the branch into the main
     # commented out for testing, eventually one of the solution for fixing fails and merging in multiple environments is disabling auto-merge
-    # - name: Merge into main
-    #   if: steps.apply.outcome == 'success'
-    #   env:
-    #     URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #   run: |
-    #     cd ${{ inputs.stack }}
-    #     curl \
-    #     -X PUT \
-    #     $URL \
-    #     -H "Content-Type: application/json" \
-    #     -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-    #     -d '{"commit_title":"Tofu update applied"}'
+    - name: Merge into main
+      if: steps.apply.outcome == 'success'
+      env:
+        URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd ${{ inputs.stack }}
+        curl \
+        -X PUT \
+        $URL \
+        -H "Content-Type: application/json" \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        -d '{"commit_title":"Tofu update applied"}'
 
     # remove the organization plan from S3 whether successful or not
     - name: Delete Plan from S3
