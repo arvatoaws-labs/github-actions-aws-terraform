@@ -1,4 +1,4 @@
-name: 'TofuPlan'
+name: "TofuPlan"
 
 on:
   issue_comment:
@@ -27,7 +27,7 @@ on:
 
 jobs:
   tofu:
-    name: 'Plan Tofu'
+    name: "Plan Tofu"
     runs-on: ubuntu-latest
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
@@ -41,154 +41,166 @@ jobs:
         shell: bash
 
     steps:
-    - name: Get PR number
-      run: echo ${{ inputs.github_event_number }}
+      - name: Get PR number
+        run: echo ${{ inputs.github_event_number }}
 
-    # Expose and capture the job ID of the current job
-    - uses: ReeganExE/github-action-job-id@v1.0
-    - name: Job ID output
-      id: job
-      run: |
-        echo ${GH_JOB_0_ID}
-        echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
+      # Expose and capture the job ID of the current job
+      - uses: ReeganExE/github-action-job-id@v1.0
+      - name: Job ID output
+        id: job
+        run: |
+          echo ${GH_JOB_0_ID}
+          echo "job_id=$GH_JOB_0_ID" >> $GITHUB_OUTPUT
 
-    # Assume the role in AWS to roll out the changes
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ inputs.region }}
-        role-to-assume: ${{ inputs.roleArn }}
-        role-session-name: GitHubTerraformDeployment
+      # Assume the role in AWS to roll out the changes
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ inputs.region }}
+          role-to-assume: ${{ inputs.roleArn }}
+          role-session-name: GitHubTerraformDeployment
 
-    # Get the github token with access to the relevant repositories from the app
-    - name: Generate token
-      id: generate-token
-      uses: actions/create-github-app-token@v2
-      with:
-        app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        owner: arvatoaws
+      # Get the github token with access to the relevant repositories from the app
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+          private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+          owner: arvatoaws
 
-    # Configure github access
-    - uses: de-vri-es/setup-git-credentials@v2
-      with:
-        credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
+      # Configure github access
+      - uses: de-vri-es/setup-git-credentials@v2
+        with:
+          credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v4
-      with:
-        ref: refs/pull/${{ inputs.github_event_number }}/merge
-    - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
-      shell: bash
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ inputs.github_event_number }}/merge
+      - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+        shell: bash
 
-    # Terraform Validation Steps
-    - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/tofu-validate@v2
-      with:
-        path: ${{ inputs.stack }}
-      env:
-        OPENTOFU_VERSION: 1.10.6
-        TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: terraform fmt ${{ inputs.stack }}
-      uses: dflook/tofu-fmt-check@v2
-      with:
-        path: ${{ inputs.stack }}
-      env:
-        OPENTOFU_VERSION: 1.10.6
-        TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+      # Terraform Validation Steps
+      - name: terraform validate ${{ inputs.stack }}
+        uses: dflook/tofu-validate@v2
+        with:
+          path: ${{ inputs.stack }}
+        env:
+          OPENTOFU_VERSION: 1.10.6
+          TERRAFORM_HTTP_CREDENTIALS: |
+            github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+          GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+      - name: terraform fmt ${{ inputs.stack }}
+        uses: dflook/tofu-fmt-check@v2
+        with:
+          path: ${{ inputs.stack }}
+        env:
+          OPENTOFU_VERSION: 1.10.6
+          TERRAFORM_HTTP_CREDENTIALS: |
+            github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+          GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-    # Install the latest version of Tofu CLI
-    - name: Setup Tofu
-      uses: opentofu/setup-opentofu@v1
-    # Initialize Terraform
-    - name: Tofu Init
-      run: |
-        cd ${{ inputs.stack }}
-        rm -rf .terraform .terraform.lock.hcl
-        tofu init -upgrade
-    # Generate tofu plan
-    - name: Tofu Plan ${{ inputs.stack }}
-      id: tfplan
-      continue-on-error: true
-      env:
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-      run: |
-        cd ${{ inputs.stack }}
-        # Bash script to build tofu plan command dynamically
-        COMMAND="tofu plan -input=false -no-color -out=tfplan"
-        SECRETS_JSON='${{ toJson(secrets) }}'
-        SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
-        # Loop over each secret in the GitHub Actions environment
-        for key in $SECRETS; do
-          value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
-          # Check if the secret name has the prefix "TF_VAR_"
-          if [[ $key == TF_VAR_* ]]; then
-            # Add the secret as an input variable to the tofu command
-            COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
+      # Install the latest version of Tofu CLI
+      - name: Setup Tofu
+        uses: opentofu/setup-opentofu@v1
+      # Initialize Terraform
+      - name: Tofu Init
+        run: |
+          cd ${{ inputs.stack }}
+          rm -rf .terraform .terraform.lock.hcl
+          tofu init -upgrade
+      # Generate tofu plan
+      - name: Tofu Plan ${{ inputs.stack }}
+        id: tfplan
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        run: |
+          cd ${{ inputs.stack }}
+          # Bash script to build tofu plan command dynamically
+          COMMAND="tofu plan -input=false -no-color -out=tfplan"
+          SECRETS_JSON='${{ toJson(secrets) }}'
+          SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
+          # Loop over each secret in the GitHub Actions environment
+          for key in $SECRETS; do
+            value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
+            # Check if the secret name has the prefix "TF_VAR_"
+            if [[ $key == TF_VAR_* ]]; then
+              # Add the secret as an input variable to the tofu command
+              COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
+            fi
+          done
+          # Execute the dynamically generated tofu command
+          eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
+          number_of_changes=$(tofu show -no-color -json tfplan | jq '
+            [ .resource_changes[]
+              | select(
+                  (.change.actions | index("create")) or
+                  (.change.actions | index("update")) or
+                  (.change.actions | index("delete"))
+                )
+            ] | length')
+          echo "changes=$number_of_changes" >> $GITHUB_OUTPUT
+      - name: Upload ${{ inputs.stack }} Plan to S3
+        run: |
+          cd ${{ inputs.stack }}
+          aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
+
+      # CONCLUDE
+      # Post a comment with the plan outputs and add the 'planned' label
+      - name: Post Plan to GitHub PR
+        env:
+          COMMENT: ${{ inputs.github_event_issue_comments_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+          cd ${{ inputs.stack }}
+          (printf "**Tofu Plan ${{ inputs.stack }} Environment**\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
+          jq -R -s '.' < comment.txt > comment2.txt
+          truncate -s -1 comment2.txt
+          (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
+          labels=("planned")
+          echo "Number of changes: ${{steps.tfplan.outputs.changes}}"
+          if [ ${{steps.tfplan.outputs.changes}} -eq 0 ]; then
+            labels+=("no changes")
           fi
-        done
-        # Execute the dynamically generated tofu command
-        eval $COMMAND && tofu show -no-color tfplan | sed 's/\x27/ /g' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
-        number_of_changes=$(tofu show -no-color -json tfplan | jq '
-          [ .resource_changes[]
-            | select(
-                (.change.actions | index("create")) or
-                (.change.actions | index("update")) or
-                (.change.actions | index("delete"))
-              )
-          ] | length')
-        echo "changes=$number_of_changes" >> $GITHUB_OUTPUT
-    - name: Upload ${{ inputs.stack }} Plan to S3
-      run: |
-        cd ${{ inputs.stack }}
-        aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
+          labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+          echo "Final labels: ${labels_final}"
+          curl \
+            -X POST \
+            $COMMENT \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -d @comment3.txt
+          curl \
+            -X POST \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -d "{\"labels\": $labels_final}"
 
-    # CONCLUDE
-    # Post a comment with the plan outputs and add the 'planned' label
-    - name: Post Plan to GitHub PR
-      env:
-        COMMENT: ${{ inputs.github_event_issue_comments_url }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        set -x
-        cd ${{ inputs.stack }}
-        (printf "**Tofu Plan ${{ inputs.stack }} Environment**\n\n\`\`\`diff" && sed '/^::/d' plan.txt) > comment.txt
-        jq -R -s '.' < comment.txt > comment2.txt
-        truncate -s -1 comment2.txt
-        (echo -n '{ "body": ' && cat comment2.txt && echo -n ' }') > comment3.txt
-        labels=("planned")
-        echo "Number of changes: ${{steps.tfplan.outputs.changes}}"
-        if [ ${{steps.tfplan.outputs.changes}} -eq 0 ]; then
-          labels+=("no changes")
-        fi
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
-        echo "Final labels: ${labels_final}"
-        curl \
-          -X POST \
-          $COMMENT \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d @comment3.txt
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
+      - name: Add apply comment
+        if: steps.tfplan.outputs.changes == 0
+        env:
+          COMMENT: ${{ inputs.github_event_issue_comments_url }}
+        run: |
+          curl \
+            -X POST \
+            $COMMENT \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ steps.generate-token.outputs.token }}" \
+            -d "/apply"
 
   logging:
-    name: 'Save logs'
+    name: "Save logs"
     needs: tofu
     runs-on: ubuntu-latest
     if: always() # This job will always run
@@ -197,24 +209,24 @@ jobs:
       id-token: write
       contents: read
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    # Assume the role in AWS to upload the logs
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ inputs.region }}
-        role-to-assume: ${{ inputs.roleArn }}
+      # Assume the role in AWS to upload the logs
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ inputs.region }}
+          role-to-assume: ${{ inputs.roleArn }}
 
-    # Save previous job logs and upload to s3
-    - name: Retrieve log file and upload to s3
-      run: |
-        TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
-        LOG_FILENAME="TofuPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
-        # Get log file
-        gh api repos/{owner}/{repo}/actions/jobs/${{ needs.tofu.outputs.output1 }}/logs > $LOG_FILENAME
-        # Upload it to s3
-        aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Save previous job logs and upload to s3
+      - name: Retrieve log file and upload to s3
+        run: |
+          TIMESTAMP=$(date +'%Y-%m-%d-%H:%M:%S')
+          LOG_FILENAME="TofuPlan_${{ inputs.github_event_number }}_PR_$TIMESTAMP.txt"
+          # Get log file
+          gh api repos/{owner}/{repo}/actions/jobs/${{ needs.tofu.outputs.output1 }}/logs > $LOG_FILENAME
+          # Upload it to s3
+          aws s3 cp $LOG_FILENAME s3://${{ inputs.s3bucketName }}/logs/Plan/
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
