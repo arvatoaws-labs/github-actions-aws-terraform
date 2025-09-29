@@ -1,4 +1,4 @@
-name: 'TofuPlanScheduled'
+name: "TofuPlanScheduled"
 
 on:
   workflow_dispatch:
@@ -14,10 +14,13 @@ on:
         required: false
         type: string
         default: "."
+      tofu_version:
+        required: true
+        type: string
 
 jobs:
   tofu:
-    name: 'Plan Tofu'
+    name: "Plan Tofu"
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -28,82 +31,83 @@ jobs:
         shell: bash
 
     steps:
-    # Assume the role in AWS to roll out the changes
-    - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-region: ${{ inputs.region }}
-        role-to-assume: ${{ inputs.roleArn }}
-    # Get the github token with access to the relevant repositories from the app
-    - name: Generate token
-      id: generate-token
-      uses: actions/create-github-app-token@v2
-      with:
-        app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        owner: arvatoaws
-    # Configure github access
-    - uses: de-vri-es/setup-git-credentials@v2
-      with:
-        credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/tofu-validate@v2
-      with:
-        path: ${{ inputs.stack }}
-      env:
-        TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    - name: terraform fmt ${{ inputs.stack }}
-      uses: dflook/tofu-fmt-check@v2
-      with:
-        path: ${{ inputs.stack }}
-      env:
-        TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
-        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-    # Install the latest version of Tofu CLI
-    - name: Setup Tofu
-      uses: opentofu/setup-opentofu@v1
-    # Initialize Terraform
-    - name: Tofu Init
-      run: |
-        cd ${{ inputs.stack }}
-        rm -rf .terraform .terraform.lock.hcl
-        tofu init -upgrade
-    # Generate plan
-    - name: Tofu Plan Landingzone
-      id: tfplan
-      continue-on-error: true
-      run: |
-        cd ${{ inputs.stack }}
-        # Bash script to build tofu plan command dynamically
-        COMMAND="tofu plan -input=false -no-color -out=tfplanlz --detailed-exitcode"
-        SECRETS_JSON='${{ toJson(secrets) }}'
-        SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
-        # Loop over each secret in the GitHub Actions environment
-        for key in $SECRETS; do
-          value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
-          # Check if the secret name has the prefix "TF_VAR_"
-          if [[ $key == TF_VAR_* ]]; then
-            # Add the secret as an input variable to the tofu command
-            COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
-          fi
-        done
-        # Execute the dynamically generated tofu command
-        eval $COMMAND
+      # Assume the role in AWS to roll out the changes
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ inputs.region }}
+          role-to-assume: ${{ inputs.roleArn }}
+      # Get the github token with access to the relevant repositories from the app
+      - name: Generate token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+          private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+          owner: arvatoaws
+      # Configure github access
+      - uses: de-vri-es/setup-git-credentials@v2
+        with:
+          credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: terraform validate ${{ inputs.stack }}
+        uses: dflook/tofu-validate@v2
+        with:
+          path: ${{ inputs.stack }}
+        env:
+          TERRAFORM_HTTP_CREDENTIALS: |
+            github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+          GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+          OPENTOFU_VERSION: ${{ inputs.tofu_version }}
+      - name: terraform fmt ${{ inputs.stack }}
+        uses: dflook/tofu-fmt-check@v2
+        with:
+          path: ${{ inputs.stack }}
+        env:
+          TERRAFORM_HTTP_CREDENTIALS: |
+            github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+          GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+      # Install the latest version of Tofu CLI
+      - name: Setup Tofu
+        uses: opentofu/setup-opentofu@v1
+      # Initialize Terraform
+      - name: Tofu Init
+        run: |
+          cd ${{ inputs.stack }}
+          rm -rf .terraform .terraform.lock.hcl
+          tofu init -upgrade
+      # Generate plan
+      - name: Tofu Plan Landingzone
+        id: tfplan
+        continue-on-error: true
+        run: |
+          cd ${{ inputs.stack }}
+          # Bash script to build tofu plan command dynamically
+          COMMAND="tofu plan -input=false -no-color -out=tfplanlz --detailed-exitcode"
+          SECRETS_JSON='${{ toJson(secrets) }}'
+          SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
+          # Loop over each secret in the GitHub Actions environment
+          for key in $SECRETS; do
+            value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
+            # Check if the secret name has the prefix "TF_VAR_"
+            if [[ $key == TF_VAR_* ]]; then
+              # Add the secret as an input variable to the tofu command
+              COMMAND="$COMMAND -var '${key#TF_VAR_}=$value'"
+            fi
+          done
+          # Execute the dynamically generated tofu command
+          eval $COMMAND
 
-    # CONCLUDE
-    # Check if plan generated differences or failed
-    - name: Check TF Plan outcome
-      if: steps.tfplan.outputs.exitcode !=0
-      run: exit 1
+      # CONCLUDE
+      # Check if plan generated differences or failed
+      - name: Check TF Plan outcome
+        if: steps.tfplan.outputs.exitcode !=0
+        run: exit 1
