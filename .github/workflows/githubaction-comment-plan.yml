@@ -197,7 +197,7 @@ jobs:
             $COMMENT \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ steps.generate-token.outputs.token }}" \
-            -d "/apply"
+            -d "{\"body\":\"/apply\"}"
 
   logging:
     name: "Save logs"
