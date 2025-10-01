@@ -308,7 +308,7 @@ jobs:
     name: 'Save logs'
     needs: tofu
     runs-on: ubuntu-latest
-    if: always() # This job will always run
+    if: needs.check-changes.outputs.stack_changed == 'true'
     permissions:
       actions: read
       id-token: write
