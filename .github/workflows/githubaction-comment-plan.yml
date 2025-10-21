@@ -28,7 +28,7 @@ on:
 jobs:
   tofu:
     name: 'Plan Tofu'
-    runs-on: ubuntu-latest
+    runs-on: arvato
     outputs:
       output1: ${{ steps.job.outputs.job_id }}
     permissions:
@@ -190,7 +190,7 @@ jobs:
   logging:
     name: 'Save logs'
     needs: tofu
-    runs-on: ubuntu-latest
+    runs-on: arvato
     if: always() # This job will always run
     permissions:
       actions: read
