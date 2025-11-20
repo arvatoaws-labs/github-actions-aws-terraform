@@ -35,7 +35,7 @@ jobs:
       stack_changed: ${{ steps.filter.outputs.stack_changed }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0  # Important to fetch all history for branches
     - name: Check for changes in the stack based on input
@@ -123,7 +123,7 @@ jobs:
 
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
@@ -315,7 +315,7 @@ jobs:
       contents: read
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     # Assume the role in AWS to upload the logs
     - name: Configure AWS Credentials
