@@ -63,14 +63,6 @@ jobs:
         fi
         exit 1
 
-  merge-check-failed:
-    runs-on: arvato
-    needs: merge-check
-    if: ${{ failure() }}
-    steps:
-    - run: |
-        exit 0 
-           
   merging:
     runs-on: arvato
     needs: merge-check
