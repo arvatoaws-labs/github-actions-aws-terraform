@@ -135,3 +135,6 @@ jobs:
           -d "{\"labels\": $labels_final}"
 
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}"
+
+        git commit --allow-empty -m "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}"
+        git push
