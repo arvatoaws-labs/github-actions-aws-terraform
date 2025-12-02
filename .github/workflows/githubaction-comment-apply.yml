@@ -135,9 +135,3 @@ jobs:
           -d "{\"labels\": $labels_final}"
 
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}"
-
-        git config --global user.email "daniel.mersch@bertelsmann.de"
-        git config --global user.name "Daniel Mersch"
-        
-        git commit --allow-empty -m "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}"
-        git push
