@@ -70,7 +70,7 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: read
+      contents: write
       pull-requests: write
     steps:
     - name: Add label to GitHub PR
@@ -93,4 +93,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo "${{ inputs.repository }}" ${{ inputs.github_event_number }}
+        gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied."
