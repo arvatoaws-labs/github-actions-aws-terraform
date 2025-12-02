@@ -37,6 +37,10 @@ jobs:
     runs-on: arvato
     needs: get-labels
     continue-on-error: true
+
+    outputs:
+      allow_merge: true
+
     # Required permissions
     permissions:
       actions: read
@@ -62,7 +66,8 @@ jobs:
         else
           exit 0
         fi
-        exit 1
+        
+        echo "allow_merge=false"  >> $GITHUB_OUTPUT
 
   merging:
     runs-on: arvato
@@ -76,6 +81,7 @@ jobs:
 
     if: ${{ success() }}
     steps:
+
     - name: Add label to GitHub PR
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -92,15 +98,18 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
+
     - name: Merging Pull request
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         # gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied."
 
-        curl \
-        -X PUT \
-        "https://api.github.com/repos/${{ github.repository }}/pulls/${{ inputs.github_event_number }}/merge" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-        -d '{"commit_title":"chore (automation): Tofu plans applied."}'
+        echo '${{ toJSON(needs.merge-check.outputs) }}'
+
+        #curl \
+        #-X PUT \
+        #"https://api.github.com/repos/${{ github.repository }}/pulls/${{ inputs.github_event_number }}/merge" \
+        #-H "Content-Type: application/json" \
+        #-H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        #-d '{"commit_title":"chore (automation): Tofu plans applied."}'
