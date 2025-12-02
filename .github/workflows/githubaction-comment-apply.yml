@@ -134,4 +134,11 @@ jobs:
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
 
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}"
+        curl \
+        -X PUT \
+        "${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        -d '{"commit_title":"Tofu update applied"}'
+
+        # gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}"

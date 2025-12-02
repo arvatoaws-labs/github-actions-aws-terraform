@@ -73,6 +73,7 @@ jobs:
       contents: write
       pull-requests: write
     steps:
+
     - name: Add label to GitHub PR
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
