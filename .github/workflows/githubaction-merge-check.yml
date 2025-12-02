@@ -63,6 +63,14 @@ jobs:
         fi
         exit 1
 
+  merge-check-failed:
+    runs-on: arvato
+    needs: merge-check
+    if: ${{ failure() }}
+    steps:
+    - run: |
+        exit 0 
+           
   merging:
     runs-on: arvato
     needs: merge-check
@@ -72,8 +80,9 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-    steps:
 
+    if: ${{ success() }}
+    steps:
     - name: Add label to GitHub PR
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -101,4 +110,4 @@ jobs:
         "https://api.github.com/repos/${{ github.repository }}/pulls/${{ inputs.github_event_number }}/merge" \
         -H "Content-Type: application/json" \
         -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-        -d '{"commit_title":"Tofu update applied"}'
+        -d '{"commit_title":"chore (automation): Tofu plans applied."}'
