@@ -134,16 +134,8 @@ jobs:
           -d "{\"labels\": $labels_final}"
 
 
-    - name: Merge into main
+    - name: Apply auto merge
       env:
-        URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        cd ${{ inputs.stack }}
-
-        curl \
-        -X PUT \
-        $URL \
-        -H "Content-Type: application/json" \
-        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-        -d '{"commit_title":"chore: Tofu update applied for environment ${{ inputs.environment }}"}'
+        gh pr merge --auto ${{ inputs.github_event_number }}
