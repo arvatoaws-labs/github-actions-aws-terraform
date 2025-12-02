@@ -106,7 +106,10 @@ jobs:
       run: |
         # gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied."
 
-        echo '${{ toJSON(needs.merge-check.outputs) }}'
+        if [[ "${{ toJSON(needs.merge-check.outputs.allow_merge) }}" != "false" ]]
+          then
+            ech "Merging allowed."
+        fi 
 
         #curl \
         #-X PUT \
