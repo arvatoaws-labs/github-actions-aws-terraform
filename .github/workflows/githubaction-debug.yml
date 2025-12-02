@@ -1,0 +1,20 @@
+---
+name: 'Debug'
+
+on:
+  workflow_call:
+
+jobs:
+  output-github-variable:
+    runs-on: arvato
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+    - name: read PR labels
+      id: get_labels
+      run: |
+        echo "${{ toJSON( github ) }}"

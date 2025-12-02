@@ -1,0 +1,96 @@
+---
+name: 'merge-check'
+
+on:
+  workflow_call:
+    inputs:
+      github_event_number:
+        required: true
+        type: string
+      github_event_issue_comments_url:
+        required: true
+        type: string
+      repository:
+        required: true
+        type: string
+
+jobs:
+  get-labels:
+    runs-on: arvato
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+    outputs:
+      labels: ${{ steps.get_labels.outputs.labels }}
+    steps:
+    - name: read PR labels
+      id: get_labels
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "LABELS"=$(gh api repos/${{ inputs.repository }}/pulls/${{ inputs.github_event_number }} | jq '.labels | map( .name ) | join ( "," )') >> $GITHUB_OUTPUT
+
+  merge-check:
+    runs-on: arvato
+    needs: get-labels
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+    strategy:
+      matrix: ${{ fromJSON (vars.TF_ACCOUNTS) }}
+    steps:
+    - name: Check if plans are successfully applied
+      run: |
+        tf_changed=${{ contains ( needs.get-labels.outputs.labels, format('terraform-{0}-planned', matrix.environment) ) }}
+        tf_applied=${{ contains ( needs.get-labels.outputs.labels, format('terraform-{0}-applied', matrix.environment) ) }}
+        echo "Environment changed: $tf_changed"
+        echo "Plan applied: $tf_applied"
+        
+        if [[ "$tf_changed" == "true" ]]
+          then
+            if [ "$tf_applied" == "true" ]
+            then
+              exit 0
+            fi
+        else
+          exit 0
+        fi
+        exit 1
+
+  merging:
+    runs-on: arvato
+    needs: merge-check
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+    steps:
+    - name: Add label to GitHub PR
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -x
+        labels=("terraform-applied")
+
+        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
+
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ inputs.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d "{\"labels\": $labels_final}"
+    - name: Merging Pull request
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo "${{ inputs.repository }}" ${{ inputs.github_event_number }}

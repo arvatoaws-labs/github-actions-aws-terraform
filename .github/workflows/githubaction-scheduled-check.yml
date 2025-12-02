@@ -1,28 +1,13 @@
-name: 'TofuApply'
-
-concurrency:
-  group: ${{ inputs.environment }}
-  cancel-in-progress: false
+name: 'TofuScheduledDrift'
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       region:
         required: true
         type: string
       roleArn:
-        required: true
-        type: string
-      s3bucketName:
-        required: true
-        type: string
-      github_event_number:
-        required: true
-        type: string
-      github_event_issue_comments_url:
-        required: true
-        type: string
-      github_event_repository_url:
         required: true
         type: string
       stack:
@@ -37,13 +22,12 @@ on:
         required: true
         type: boolean
         default: false
+
 jobs:
   tofu:
-    name: 'Apply Tofu'
+    name: 'Drift Tofu'
     runs-on: arvato
-
     permissions:
-      actions: read
       id-token: write
       contents: read
       pull-requests: write
@@ -59,7 +43,6 @@ jobs:
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
-        role-session-name: GitHubTerraformDeployment
 
     # Get the github token with access to the relevant repositories from the app
     - name: Generate token
@@ -77,20 +60,13 @@ jobs:
 
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        ref: refs/pull/${{ inputs.github_event_number }}/merge
-        fetch-depth: 0
-
-    - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
-      shell: bash
-
-    - name: terraform apply ${{ inputs.stack }}
-      id: tfapply
-      uses: dflook/tofu-apply@v2
+      uses: actions/checkout@v4
+      
+    - name: terraform check ${{ inputs.stack }}
+      id: check
+      uses: dflook/tofu-check@v2
       with:
         path: ${{ inputs.stack }}
-        label: ${{ inputs.environment }}
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
@@ -99,17 +75,16 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         TERRAFORM_PRE_RUN: |
-          # Install AWS CLI
+          # Install AWS CLI for X86
           curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
           unzip -q awscliv2.zip
           ./aws/install
           /usr/local/bin/aws --version
-                  
+
           SECRETS_JSON='${{ toJson(secrets) }}'
           SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
           # Loop over each secret in the GitHub Actions environment
           for key in $SECRETS; do
-            value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
             # Check if the secret name has the prefix "TF_VAR_"
             if [[ $key == TF_VAR_* ]]; then
               # Add the secret as an input variable to the tofu command
@@ -117,34 +92,10 @@ jobs:
             fi
           done
 
-    - name: Add labels to GitHub PR
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        set -x
-        labels=("terraform-${{ inputs.environment }}-applied")
-        
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
-        echo "Final labels: ${labels_final}"
+    - name: Changes detected
+      if: ${{ failure() && steps.check.outputs.failure-reason == 'changes-to-apply' }}
+      run: echo "IaC code does not match current infrastructure. Please apply changes."
 
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
-
-
-    - name: Merge into main
-      env:
-        URL: ${{ inputs.github_event_repository_url }}/pulls/${{ inputs.github_event_number }}/merge
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        cd ${{ inputs.stack }}
-
-        curl \
-        -X PUT \
-        $URL \
-        -H "Content-Type: application/json" \
-        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-        -d '{"commit_title":"chore: Tofu update applied for environment ${{ inputs.environment }}"}'
+    - name: Check failed
+      if: ${{ failure() && steps.check.outputs.failure-reason != 'changes-to-apply' }}
+      run: echo "Drift check failed."
