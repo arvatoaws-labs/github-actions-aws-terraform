@@ -94,4 +94,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied."
+        # gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied."
+
+        curl \
+        -X PUT \
+        "https://api.github.com/repos/${{ github.repository }}/pulls/${{ inputs.github_event_number }}/merge" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        -d '{"commit_title":"Tofu update applied"}'
