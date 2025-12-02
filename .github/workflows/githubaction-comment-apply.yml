@@ -138,4 +138,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh pr merge --auto ${{ inputs.github_event_number }}
+        gh pr merge --auto --merge -t "chore: Tofu applied for environment ${{ inputs.environment }}" ${{ inputs.github_event_number }}
