@@ -39,7 +39,7 @@ jobs:
     continue-on-error: true
 
     outputs:
-      allow_merge: true
+      allow_merge: ${{ steps.env-merge-check.outputs.ALLOW_MERGE }}
 
     # Required permissions
     permissions:
@@ -51,6 +51,7 @@ jobs:
       matrix: ${{ fromJSON (vars.TF_ACCOUNTS) }}
     steps:
     - name: Check if plans are successfully applied
+      id: env-merge-check
       run: |
         tf_changed=${{ contains ( needs.get-labels.outputs.labels, format('terraform-{0}-planned', matrix.environment) ) }}
         tf_applied=${{ contains ( needs.get-labels.outputs.labels, format('terraform-{0}-applied', matrix.environment) ) }}
@@ -67,7 +68,7 @@ jobs:
           exit 0
         fi
         
-        echo "allow_merge=false"  >> $GITHUB_OUTPUT
+        echo "ALLOW_MERGE=false" >> $GITHUB_OUTPUT
 
   merging:
     runs-on: arvato
