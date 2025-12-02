@@ -121,6 +121,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
         labels=("terraform-${{ inputs.environment }}-applied")
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
@@ -133,4 +134,4 @@ jobs:
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
 
-        gh pr comment ${{ inputs.github_event_number }} --body "Successfully applied Tofu to ${{ inputs.environment }}"
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}"
