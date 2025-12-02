@@ -41,7 +41,7 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: write
+      contents: read
       pull-requests: write
     defaults:
       run:
