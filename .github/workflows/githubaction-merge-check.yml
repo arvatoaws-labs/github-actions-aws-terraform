@@ -119,7 +119,7 @@ jobs:
 
         if [[ "${{ toJSON(needs.merge-check.outputs.allow_merge) }}" != "false" ]]
           then
-            gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo ${{ github.repository }}
+            gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
             exit 0
             curl \
             -X PUT \
