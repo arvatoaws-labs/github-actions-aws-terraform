@@ -116,6 +116,13 @@ jobs:
             fi
           done
 
+    - name: Generate TF docs
+      uses: terraform-docs/gh-actions@v1.4.1
+      with:
+          working-dir: terraform
+          config-file: .terraform-docs.yml
+          git-push: true
+
     - name: Add labels to GitHub PR
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
