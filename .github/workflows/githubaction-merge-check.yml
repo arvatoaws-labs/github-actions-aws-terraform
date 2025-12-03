@@ -83,7 +83,7 @@ jobs:
     if: ${{ success() }}
     steps:
 
-    - uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-debug.yml@v2
+    - uses: ./.github/workflows/githubaction-comment-debug.yml
 
     - uses: actions/checkout@v6
       with:
