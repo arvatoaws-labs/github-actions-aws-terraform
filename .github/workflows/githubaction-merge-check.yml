@@ -113,5 +113,5 @@ jobs:
             "https://api.github.com/repos/${{ github.repository }}/pulls/${{ inputs.github_event_number }}/merge" \
             -H "Content-Type: application/json" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -d '{"commit_title":"chore (automation): Tofu plans applied."}'
+            -d '{"commit_title":"chore (automation): Tofu plans applied for Pull Request #${{ inputs.github_event_number }}."}'
         fi 
