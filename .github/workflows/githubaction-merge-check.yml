@@ -109,14 +109,3 @@ jobs:
           then
             gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
         fi
-
-    - uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-
-    - name: Generate TF docs
-      uses: terraform-docs/gh-actions@v1.4.1
-      with:
-          working-dir: terraform
-          config-file: .terraform-docs.yml
-          git-push: true
