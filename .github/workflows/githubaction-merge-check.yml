@@ -114,4 +114,13 @@ jobs:
             -H "Content-Type: application/json" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -d '{"commit_title":"chore (automation): Tofu plans applied for Pull Request #${{ inputs.github_event_number }}."}'
-        fi 
+        fi
+
+    - uses: actions/checkout@v6
+    
+    - name: Generate TF docs
+      uses: terraform-docs/gh-actions@v1.4.1
+      with:
+          working-dir: terraform
+          config-file: .terraform-docs.yml
+          git-push: true
