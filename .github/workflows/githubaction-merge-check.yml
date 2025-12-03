@@ -83,6 +83,17 @@ jobs:
     if: ${{ success() }}
     steps:
 
+    - uses: actions/checkout@v6
+      with:
+        ref: refs/pull/${{ inputs.github_event_number }}/merge
+
+    - name: Generate TF docs
+      uses: terraform-docs/gh-actions@v1.4.1
+      with:
+          working-dir: terraform
+          config-file: .terraform-docs.yml
+          git-push: true
+
     - name: Add label to GitHub PR
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -116,12 +127,3 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -d '{"commit_title":"chore (automation): Tofu plans applied for Pull Request #${{ inputs.github_event_number }}."}'
         fi
-
-    - uses: actions/checkout@v6
-
-    - name: Generate TF docs
-      uses: terraform-docs/gh-actions@v1.4.1
-      with:
-          working-dir: terraform
-          config-file: .terraform-docs.yml
-          git-push: true
