@@ -83,13 +83,14 @@ jobs:
     if: ${{ success() }}
     steps:
 
-    - uses: .github/workflows/githubaction-comment-debug.yml
-
     - uses: actions/checkout@v6
       with:
         ref: ${{github.event.pull_request.base.ref}}
         fetch-depth: 0
 
+    - run: |
+        echo "${{ toJSON( github ) }}"
+        
     - name: Generate TF docs
       uses: terraform-docs/gh-actions@v1.4.1
       with:
