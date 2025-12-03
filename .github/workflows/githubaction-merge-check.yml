@@ -104,10 +104,11 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied."
 
         if [[ "${{ toJSON(needs.merge-check.outputs.allow_merge) }}" != "false" ]]
           then
+            gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo ${{ github.repository }}
+            exit 0
             curl \
             -X PUT \
             "https://api.github.com/repos/${{ github.repository }}/pulls/${{ inputs.github_event_number }}/merge" \
@@ -117,7 +118,7 @@ jobs:
         fi
 
     - uses: actions/checkout@v6
-    
+
     - name: Generate TF docs
       uses: terraform-docs/gh-actions@v1.4.1
       with:
