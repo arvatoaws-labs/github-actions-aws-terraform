@@ -110,10 +110,11 @@ jobs:
             if [[ $key == TF_VAR_* ]]; then
               # Add the secret as an input variable to the tofu command
               export "$key=$value"
+              echo "$key=$value" >> /tmp/secret_variables.tfvar
             fi
           done
 
-          printenv
+          cat /tmp/secret_variables.tfvar
 
     - name: Add labels to GitHub PR
       env:
