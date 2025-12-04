@@ -88,7 +88,7 @@ jobs:
         add_github_comment: always-new
         label: ${{ inputs.environment }}
         var_file: |
-          /tmp/secret_variables.tfvars
+          secret_variables.tfvars
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
@@ -112,11 +112,11 @@ jobs:
             if [[ $key == TF_VAR_* ]]; then
               # Add the secret as an input variable to the tofu command
               export "$key=$value"
-              echo "$key=$value" >> /tmp/secret_variables.tfvars
+              echo "$key=$value" >> ./secret_variables.tfvars
             fi
           done
 
-          cat /tmp/secret_variables.tfvars
+          cat ./secret_variables.tfvars
 
     - name: Add labels to GitHub PR
       env:
