@@ -84,12 +84,30 @@ jobs:
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
+    - name: Reading Terraform variables from GitHub Secrets
+      run: |
+        SECRETS_JSON='${{ toJson(secrets) }}'
+        SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
+        # Loop over each secret in the GitHub Actions environment
+        for key in $SECRETS; do
+          value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
+          # Check if the secret name has the prefix "TF_VAR_"
+          if [[ $key == TF_VAR_* ]]; then
+            # Add the secret as an input variable to the tofu command
+            export "$key=$value"
+            echo "${key#TF_VAR_} = \"$value\"" >> ${{ github.workspace }}/secret_variables.tfvars
+          fi
+        done
+      shell: bash
+
     - name: terraform apply ${{ inputs.stack }}
       id: tfapply
       uses: dflook/tofu-apply@v2
       with:
         path: ${{ inputs.stack }}
         label: ${{ inputs.environment }}
+        var_file: |
+          secret_variables.tfvars
       env:
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}

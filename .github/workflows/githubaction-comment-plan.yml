@@ -1,9 +1,5 @@
 name: 'TofuPlan'
 
-concurrency:
-  group: ${{ inputs.environment }}
-  cancel-in-progress: false
-
 on:
   workflow_call:
     inputs:
@@ -77,10 +73,12 @@ jobs:
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
 
-    - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
+    - name: Reading Repository name
+      run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
-    - run: |
+    - name: Reading Terraform variables from GitHub Secrets
+      run: |
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
         # Loop over each secret in the GitHub Actions environment
@@ -93,8 +91,6 @@ jobs:
             echo "${key#TF_VAR_} = \"$value\"" >> ${{ github.workspace }}/secret_variables.tfvars
           fi
         done
-
-        cat ${{ github.workspace }}/secret_variables.tfvars
       shell: bash
 
     - name: terraform plan ${{ inputs.stack }}
