@@ -90,7 +90,7 @@ jobs:
           if [[ $key == TF_VAR_* ]]; then
             # Add the secret as an input variable to the tofu command
             export "$key=$value"
-            echo "${key#TF_VAR_}=$value" >> ${{ github.workspace }}/secret_variables.tfvars
+            echo "${key#TF_VAR_} = \"$value\"" >> ${{ github.workspace }}/secret_variables.tfvars
           fi
         done
 
