@@ -113,6 +113,8 @@ jobs:
             fi
           done
 
+          printenv
+
     - name: Add labels to GitHub PR
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
