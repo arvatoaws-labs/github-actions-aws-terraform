@@ -60,6 +60,22 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Reading Terraform variables from GitHub Secrets
+      run: |
+        SECRETS_JSON='${{ toJson(secrets) }}'
+        SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
+        # Loop over each secret in the GitHub Actions environment
+        for key in $SECRETS; do
+          value=$(echo "$SECRETS_JSON" | jq -r ".[\"$key\"]")
+          # Check if the secret name has the prefix "TF_VAR_"
+          if [[ $key == TF_VAR_* ]]; then
+            # Add the secret as an input variable to the tofu command
+            export "$key=$value"
+            echo "${key#TF_VAR_} = \"$value\"" >> ${{ github.workspace }}/secret_variables.tfvars
+          fi
+        done
+      shell: bash
+
     - name: terraform plan ${{ inputs.stack }}
       uses: dflook/tofu-plan@v2
       with:
@@ -77,14 +93,3 @@ jobs:
           unzip awscliv2.zip
           ./aws/install
           /usr/local/bin/aws --version
-
-          SECRETS_JSON='${{ toJson(secrets) }}'
-          SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
-          # Loop over each secret in the GitHub Actions environment
-          for key in $SECRETS; do
-            # Check if the secret name has the prefix "TF_VAR_"
-            if [[ $key == TF_VAR_* ]]; then
-              # Add the secret as an input variable to the tofu command
-              export "$key=$value"
-            fi
-          done
