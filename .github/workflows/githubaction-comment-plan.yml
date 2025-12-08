@@ -123,24 +123,14 @@ jobs:
       run: |
         set -x
 
-
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.environment }}-planned"
+        
         labels=("terraform-${{ inputs.environment }}-planned")
 
-        echo "changes: ${{ steps.tfplan.outputs.changes }}"
         if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
           then
-            labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
+            gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.environment }}-plan-no-changes"
         fi
-        
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
-        echo "Final labels: ${labels_final}"
-
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
 
     - name: Add labels to GitHub PR
       if: failure()
