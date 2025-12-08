@@ -124,27 +124,15 @@ jobs:
         set -x
 
         gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-planned --repo ${{ github.repository }}
+        gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed --repo ${{ github.repository }}
 
-        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`       
-        labels=("terraform-${{ inputs.environment }}-planned")
-
-        echo "changes: ${{ steps.tfplan.outputs.changes }}"
         if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
           then
             labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
+            gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan-no_changes --repo ${{ github.repository }}
         fi
         
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
-        echo "Final labels: ${labels_final}"
-
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
- 
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}"
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}" --repo ${{ github.repository }}
 
     - name: Add Failed labels to GitHub PR
       if: failure()
@@ -155,4 +143,4 @@ jobs:
 
         gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-planned --repo ${{ github.repository }}
         gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed --repo ${{ github.repository }}
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on ${{ inputs.environment }}"
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on ${{ inputs.environment }}" --repo ${{ github.repository }}
