@@ -149,14 +149,5 @@ jobs:
       run: |
         set -x
 
-        labels=("terraform-${{ inputs.environment }}-plan-failed")
-        
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
-        echo "Final labels: ${labels_final}"
-
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
+        gh pr edit ${{ inputs.github_event_number }} --remove-label "terraform-${{ inputs.environment }}-planned"
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.environment }}-plan-failed"
