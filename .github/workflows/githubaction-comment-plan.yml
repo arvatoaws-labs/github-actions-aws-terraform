@@ -116,24 +116,40 @@ jobs:
           ./aws/install
           /usr/local/bin/aws --version
 
-    - name: Add labels to GitHub PR
-      if: always()
+        - name: Add labels to GitHub PR
+      if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
 
-        if [ "${{ success() }}" == "true"]
-          labels=("terraform-${{ inputs.environment }}-planned")
 
-          echo "changes: ${{ steps.tfplan.outputs.changes }}"
-          if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
-            then
-              labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
-          fi
-        else
-          labels=("terraform-${{ inputs.environment }}-plan-failed")
-        if
+        labels=("terraform-${{ inputs.environment }}-planned")
+
+        echo "changes: ${{ steps.tfplan.outputs.changes }}"
+        if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
+          then
+            labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
+        fi
+        
+        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
+
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d "{\"labels\": $labels_final}"
+
+    - name: Add labels to GitHub PR
+      if: failure()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -x
+
+        labels=("terraform-${{ inputs.environment }}-plan-failed")
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         echo "Final labels: ${labels_final}"
