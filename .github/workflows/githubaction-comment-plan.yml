@@ -116,7 +116,7 @@ jobs:
           ./aws/install
           /usr/local/bin/aws --version
 
-    - name: Add labels to GitHub PR
+    - name: Add plan successful labels to GitHub PR
       if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -132,7 +132,7 @@ jobs:
             gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.environment }}-plan-no-changes"
         fi
 
-    - name: Add labels to GitHub PR
+    - name: Add plan failed labels to GitHub PR
       if: failure()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
