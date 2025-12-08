@@ -95,6 +95,7 @@ jobs:
 
     - name: terraform plan ${{ inputs.stack }}
       id: tfplan
+      continue-on-error: true
       uses: dflook/tofu-plan@v2
       with:
         path: ${{ inputs.stack }}
