@@ -142,6 +142,8 @@ jobs:
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
 
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}"
+
     - name: Add labels to GitHub PR
       if: failure()
       env:
@@ -161,3 +163,5 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
+
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on ${{ inputs.environment }}"
