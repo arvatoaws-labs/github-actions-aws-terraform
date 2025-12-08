@@ -110,38 +110,54 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         TERRAFORM_PRE_RUN: |
-          set -x
-
           # Install AWS CLI
           curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
           unzip -q awscliv2.zip
           ./aws/install
           /usr/local/bin/aws --version
 
-    - name: Add plan successful labels to GitHub PR
+    - name: Add labels to GitHub PR
       if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
 
-        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.environment }}-planned"
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`       
+        labels=("terraform-${{ inputs.environment }}-planned")
 
+        echo "changes: ${{ steps.tfplan.outputs.changes }}"
         if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
           then
-            gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.environment }}-plan-no-changes"
+            labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
         fi
+        
+        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
 
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}"
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d "{\"labels\": $labels_final}"
 
-    - name: Add plan failed labels to GitHub PR
+    - name: Add labels to GitHub PR
       if: failure()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
 
-        gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-planned
-        gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`       
+        labels+=("terraform-${{ inputs.environment }}-plan-failed")
+        
+        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
 
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on ${{ inputs.environment }}"
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d "{\"labels\": $labels_final}"
