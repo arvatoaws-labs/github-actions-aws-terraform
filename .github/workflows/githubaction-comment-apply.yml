@@ -130,7 +130,16 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
 
-        gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-apply_failed --remove-label terraform-${{ inputs.environment }}-applied --repo ${{ github.repository }}
-        gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-applied --repo ${{ github.repository }}
+        labels=("terraform-${{ inputs.environment }}-applied")
+        
+        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
+
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d "{\"labels\": $labels_final}"
       
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}" --repo ${{ github.repository }}

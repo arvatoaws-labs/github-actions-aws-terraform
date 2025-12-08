@@ -124,10 +124,23 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
-        labels=("terraform-${{ inputs.environment }}-applied")
+        labels=("terraform-${{ inputs.environment }}-planned")
+        
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
 
-        echo "{\"labels\": $labels_final}" | gh api repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels --method POST --repo ${{ github.repository }}
+        echo "changes: ${{ steps.tfplan.outputs.changes }}"
+        if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
+          then
+            labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
+        fi
+        
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d "{\"labels\": $labels_final}"
         
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}" --repo ${{ github.repository }}
 
@@ -140,7 +153,15 @@ jobs:
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
         labels=("terraform-${{ inputs.environment }}-plan_failed")
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         
-        echo "{\"labels\": $labels_final}" | gh api repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels --method POST
+        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
+        echo "Final labels: ${labels_final}"
+
+        curl \
+          -X POST \
+          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+          -H "Content-Type: application/json" \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -d "{\"labels\": $labels_final}"
+
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}" --repo ${{ github.repository }}
