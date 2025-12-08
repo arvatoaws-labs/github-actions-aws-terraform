@@ -95,7 +95,6 @@ jobs:
 
     - name: terraform plan ${{ inputs.stack }}
       id: tfplan
-      continue-on-error: true
       uses: dflook/tofu-plan@v2
       with:
         path: ${{ inputs.stack }}
@@ -117,7 +116,7 @@ jobs:
           ./aws/install
           /usr/local/bin/aws --version
 
-    - name: Add labels to GitHub PR
+    - name: Add Successful labels to GitHub PR
       if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -145,7 +144,7 @@ jobs:
 
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}"
 
-    - name: Add labels to GitHub PR
+    - name: Add Failed labels to GitHub PR
       if: failure()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
