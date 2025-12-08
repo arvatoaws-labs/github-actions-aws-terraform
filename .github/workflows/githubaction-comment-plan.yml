@@ -151,5 +151,5 @@ jobs:
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         echo "Final labels: ${labels_final}"
 
-        gh api repos/${{ github.repository }}/labels --method POST --field labels=$labels_final
+        gh api repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels --method POST --field labels=$labels_final
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on ${{ inputs.environment }}"
