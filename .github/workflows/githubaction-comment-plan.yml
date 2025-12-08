@@ -141,5 +141,7 @@ jobs:
       run: |
         set -x
 
-        gh pr edit ${{ inputs.github_event_number }} --remove-label "terraform-${{ inputs.environment }}-planned" --add-label "terraform-${{ inputs.environment }}-failed"
+        gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-planned
+        gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed
+
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on ${{ inputs.environment }}"
