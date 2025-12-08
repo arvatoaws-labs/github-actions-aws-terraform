@@ -122,6 +122,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
         gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed --add-label terraform-${{ inputs.environment }}-planned --repo ${{ github.repository }}
         gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-plan_failed --remove-label terraform-${{ inputs.environment }}-planned --repo ${{ github.repository }}
@@ -141,7 +142,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
-
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
+        
         gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed --add-label terraform-${{ inputs.environment }}-planned --repo ${{ github.repository }}
         gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-plan_failed --remove-label terraform-${{ inputs.environment }}-planned --repo ${{ github.repository }}
         gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed --repo ${{ github.repository }}
