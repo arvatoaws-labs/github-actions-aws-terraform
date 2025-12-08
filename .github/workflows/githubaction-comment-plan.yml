@@ -142,6 +142,5 @@ jobs:
         labels=("terraform-${{ inputs.environment }}-plan_failed")
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         
-        echo "{\"labels\": $labels_final}" | gh api repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels --method POST --repo ${{ github.repository }}
-        
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}"
+        echo "{\"labels\": $labels_final}" | gh api repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels --method POST
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.environment }}" --repo ${{ github.repository }}
