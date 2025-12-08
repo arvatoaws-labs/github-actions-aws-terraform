@@ -122,13 +122,17 @@ jobs:
       run: |
         set -x
 
-        labels=("terraform-${{ inputs.environment }}-planned")
+        if [ "${{ success() }}" == "true"]
+          labels=("terraform-${{ inputs.environment }}-planned")
 
-        echo "changes: ${{ steps.tfplan.outputs.changes }}"
-        if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
-          then
-            labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
-        fi
+          echo "changes: ${{ steps.tfplan.outputs.changes }}"
+          if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
+            then
+              labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
+          fi
+        else
+          labels=("terraform-${{ inputs.environment }}-plan-failed")
+        if
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         echo "Final labels: ${labels_final}"
