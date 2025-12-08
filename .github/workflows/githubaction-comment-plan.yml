@@ -116,7 +116,7 @@ jobs:
           ./aws/install
           /usr/local/bin/aws --version
 
-        - name: Add labels to GitHub PR
+    - name: Add labels to GitHub PR
       if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
