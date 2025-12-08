@@ -153,9 +153,8 @@ jobs:
       run: |
         set -x
 
-        gh pr comment ${{ inputs.github_event_number }} --repo ${{ github.repository }} --body-file ${{ steps.tfplan.outputs.plan_path }}
-
         gh pr edit ${{ inputs.github_event_number }} --remove-label terraform-${{ inputs.environment }}-planned --repo ${{ github.repository }}
+        gh pr edit ${{ inputs.github_event_number }} --add-label terraform-${{ inputs.environment }}-plan_failed --repo ${{ github.repository }}
 
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`       
         labels+=("terraform-${{ inputs.environment }}-plan_failed")
