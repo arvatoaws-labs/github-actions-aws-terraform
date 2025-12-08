@@ -117,6 +117,7 @@ jobs:
           /usr/local/bin/aws --version
 
     - name: Add labels to GitHub PR
+      if: always()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
