@@ -54,7 +54,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
-        OPENTOFU_VERSION: 1.10.6
+        OPENTOFU_VERSION: 1.11.5
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -66,7 +66,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
-        OPENTOFU_VERSION: 1.10.6
+        OPENTOFU_VERSION: 1.11.5
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
