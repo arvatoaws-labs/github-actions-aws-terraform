@@ -48,7 +48,7 @@ jobs:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: terraform validate ${{ inputs.stack }}
       uses: dflook/tofu-validate@v2
       with:
