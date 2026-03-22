@@ -61,6 +61,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Reading Terraform variables from GitHub Secrets
+      id: generate-tf-secrets
       run: |
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
@@ -74,7 +75,7 @@ jobs:
             echo "${key#TF_VAR_} = \"$value\"" >> ${{ github.workspace }}/secret_variables.tfvars
           fi
         done
-        echo "$GITHUB_WORKSPACE"
+        echo "secrets_file='${{ github.workspace }}/secret_variables.tfvars'" >> "$GITHUB_OUTPUT"
       shell: bash
 
     - name: terraform plan ${{ inputs.stack }}
@@ -82,7 +83,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
         var_file: |
-          ${{ github.workspace }}/secret_variables.tfvars
+          ${{ steps.generate-tf-secrets.outouts.secrets_file }}
       env:
         OPENTOFU_VERSION: 1.11.5
         TERRAFORM_HTTP_CREDENTIALS: |
