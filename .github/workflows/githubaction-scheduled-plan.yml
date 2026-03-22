@@ -74,6 +74,7 @@ jobs:
             echo "${key#TF_VAR_} = \"$value\"" >> ${{ github.workspace }}/secret_variables.tfvars
           fi
         done
+        echo "$GITHUB_WORKSPACE"
       shell: bash
 
     - name: terraform plan ${{ inputs.stack }}
