@@ -60,7 +60,7 @@ jobs:
 
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
   
     - name: Reading Terraform variables from GitHub Secrets
       run: |
