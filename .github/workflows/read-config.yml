@@ -5,7 +5,7 @@ on:
     inputs:
       config_file:
         type: string
-        default: ./github/config.yaml
+        default: .github/config.yaml
     outputs:
       config_data:
         description: "The YAML content of the config file"
