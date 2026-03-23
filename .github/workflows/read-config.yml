@@ -1,0 +1,72 @@
+name: Read Config
+
+on:
+  workflow_call:
+    outputs:
+      config_data:
+        description: "The YAML content of the config file"
+        value: ${{ jobs.read-repo-config.outputs.config_data }}
+      accounts:
+        value: ${{ jobs.read-repo-config.outputs.accounts }}
+      stacks:
+        value: ${{ jobs.read-repo-config.outputs.stacks }}
+
+jobs:
+  read-repo-config:
+
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    runs-on: arvato
+
+    outputs:
+      config_data: ${{ steps.read-yaml.outputs.config_data }}
+      accounts: ${{ steps.read-yaml.outputs.accounts }}
+      stacks: ${{ steps.read-yaml.outputs.stacks }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Read YAML
+        id: read-yaml
+        env:
+          config_file: config.yaml
+        run: |
+          if [[ -f "${{ env.config_file }}" ]]; then
+              # Validate JSON
+              if yq eval '.' ${{ env.config_file }} > /dev/null 2>&1; then
+
+                result=$(yq -o=json -I=0 '.include = .accounts | del(.accounts)' ${{ env.config_file }})
+                  # Use a heredoc to handle potential multiline data safely
+                  {
+                    echo "config_data<<EOF"
+                    echo "$result"
+                    echo "EOF"
+                  } >> "$GITHUB_OUTPUT"
+
+                  result=$(yq -o=json -I=0 '.accounts = .accounts' ${{ env.config_file }})
+                  {
+                    echo "accounts<<EOF"
+                    echo "$result"
+                    echo "EOF"
+                  } >> "$GITHUB_OUTPUT"
+
+                  result=$(yq -o=json -I=0 '[.accounts[].stack]' ${{ env.config_file }})
+                  {
+                    echo "stacks<<EOF"
+                    echo "$result"
+                    echo "EOF"
+                  } >> "$GITHUB_OUTPUT"
+                  
+                  echo "Successfully wrote config to GITHUB_OUTPUT"
+              else
+                  echo "Error: ${{ env.config_file }} contains invalid YAML"
+                  exit 1
+              fi
+          else
+              echo "Error: ${{ env.config_file }} not found"
+              exit 1
+          fi

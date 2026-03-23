@@ -15,6 +15,9 @@ on:
         type: string
 
 jobs:
+  read-config:
+    uses: ./.github/workflows/read-config.yml
+
   get-labels:
     runs-on: arvato
     # Required permissions
@@ -35,7 +38,7 @@ jobs:
 
   merge-check:
     runs-on: arvato
-    needs: get-labels
+    needs: [ get-labels, read-config ]
     continue-on-error: true
 
     outputs:
@@ -48,7 +51,7 @@ jobs:
       contents: read
       pull-requests: write
     strategy:
-      matrix: ${{ fromJSON (vars.TF_ACCOUNTS) }}
+      matrix: ${{ fromJSON(needs.read-config.outputs.config_data) }}
     steps:
     - name: Check if plans are successfully applied
       id: env-merge-check
