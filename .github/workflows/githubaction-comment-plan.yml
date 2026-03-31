@@ -99,7 +99,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
         add_github_comment: always-new
-        label: ${{ inputs.environment }}
+        label: ${{ inputs.stack }} (${{ inputs.environment }})
         var_file: |
           secret_variables.tfvars
       env:
@@ -143,7 +143,7 @@ jobs:
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
         
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on stack: ${{ inputs.stack }}, env: ${{ inputs.environment }}" --repo ${{ github.repository }}
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.stack }} (${{ inputs.environment }})" --repo ${{ github.repository }}
 
     - name: Add Failed labels to GitHub PR
       if: failure()
@@ -165,4 +165,4 @@ jobs:
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
 
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on stack: ${{ inputs.stack }}, env: ${{ inputs.environment }}" --repo ${{ github.repository }}
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on ${{ inputs.stack }} (${{ inputs.environment }})" --repo ${{ github.repository }}
