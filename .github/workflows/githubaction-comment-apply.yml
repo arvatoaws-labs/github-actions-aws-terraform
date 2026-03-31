@@ -143,4 +143,4 @@ jobs:
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d "{\"labels\": $labels_final}"
       
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.environment }}" --repo ${{ github.repository }}
+        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to stack: ${{ inputs.stack }}, env: ${{ inputs.environment }}" --repo ${{ github.repository }}
