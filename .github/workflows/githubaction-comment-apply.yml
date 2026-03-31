@@ -131,7 +131,7 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
 
-        labels=("terraform-${{ inputs.environment }}-applied")
+        labels=("terraform-${{ inputs.stack }}-applied")
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         echo "Final labels: ${labels_final}"

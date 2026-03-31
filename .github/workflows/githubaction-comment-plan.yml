@@ -133,7 +133,7 @@ jobs:
         echo "changes: ${{ steps.tfplan.outputs.changes }}"
         if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
           then
-            labels+=("terraform-${{ inputs.environment }}-plan-no_changes")
+            labels+=("terraform-${{ inputs.stack }}-plan-no_changes")
         fi
 
         curl \
@@ -153,7 +153,7 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
-        labels=("terraform-${{ inputs.environment }}-plan_failed")
+        labels=("terraform-${{ inputs.stack }}-plan_failed")
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         echo "Final labels: ${labels_final}"
