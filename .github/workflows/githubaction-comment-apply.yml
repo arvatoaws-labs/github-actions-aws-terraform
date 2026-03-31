@@ -37,6 +37,10 @@ on:
         required: true
         type: boolean
         default: false
+      do_merge_on_success:
+        required: false
+        type: boolean
+        default: true
 jobs:
   tofu:
     name: 'Apply Tofu'
@@ -125,13 +129,14 @@ jobs:
           /usr/local/bin/aws --version
 
     - name: Add labels to GitHub PR
+      id: add-labels-to-pull-request
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
 
-        labels=("terraform-${{ inputs.stack }}-applied")
+        labels=("terraform-${{ inputs.stack }}-applied", "terraform-applied")
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         echo "Final labels: ${labels_final}"
@@ -144,3 +149,11 @@ jobs:
           -d "{\"labels\": $labels_final}"
       
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to ${{ inputs.stack }} (${{ inputs.environment }})" --repo ${{ github.repository }}
+
+    - name: Merging Pull request
+      id: merge-pull-request
+      if: ${{ inputs.do_merge_on_success && success() }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
