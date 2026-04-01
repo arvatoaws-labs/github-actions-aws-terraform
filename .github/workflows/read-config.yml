@@ -32,6 +32,7 @@ jobs:
       config_data: ${{ steps.read-yaml.outputs.config_data }}
       accounts: ${{ steps.read-yaml.outputs.accounts }}
       stacks: ${{ steps.read-yaml.outputs.stacks }}
+      labels: ${{ steps.get-pr-labels.outputs.labels }}
 
     steps:
       - uses: actions/checkout@v6
