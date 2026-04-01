@@ -88,11 +88,6 @@ jobs:
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
 
-    - name: Reading Repository name
-      id: read-repository-name
-      run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
-      shell: bash
-
     - name: Reading Terraform variables from GitHub Secrets
       id: read-github-secrets
       run: |
