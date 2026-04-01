@@ -14,8 +14,6 @@ on:
         value: ${{ jobs.read-repo-config.outputs.accounts }}
       stacks:
         value: ${{ jobs.read-repo-config.outputs.stacks }}
-      pr-labels:
-        value: ${{ jobs.read-repo-config.outputs.labels }}
 
 jobs:
   read-repo-config:
@@ -32,7 +30,6 @@ jobs:
       config_data: ${{ steps.read-yaml.outputs.config_data }}
       accounts: ${{ steps.read-yaml.outputs.accounts }}
       stacks: ${{ steps.read-yaml.outputs.stacks }}
-      pr-labels: ${{ steps.get-pr-labels.outputs.labels }}
 
     steps:
       - uses: actions/checkout@v6
@@ -76,10 +73,3 @@ jobs:
               echo "Error: ${{ inputs.config_file }} not found"
               exit 1
           fi
-      - name: read PR labels
-        id: get-pr-labels
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "labels"=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number || github.event.pull_request.number }} | jq '.labels | map( .name ) | join ( "," )')
-          echo "labels"=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number || github.event.pull_request.number }} | jq '.labels | map( .name ) | join ( "," )') >> $GITHUB_OUTPUT
