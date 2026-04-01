@@ -136,7 +136,7 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
 
-        gh label create "terraform-${{ inputs.stack }}-applied" --color "00ff00" --force
+        gh label create "terraform-${{ inputs.stack }}-applied" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
 
