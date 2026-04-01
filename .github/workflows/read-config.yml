@@ -15,7 +15,7 @@ on:
       stacks:
         value: ${{ jobs.read-repo-config.outputs.stacks }}
       labels:
-        value: ${{ jobs.get-pr-labels.outputs.labels }}
+        value: ${{ jobs.read-repo-config.outputs.labels }}
 
 jobs:
   read-repo-config:
