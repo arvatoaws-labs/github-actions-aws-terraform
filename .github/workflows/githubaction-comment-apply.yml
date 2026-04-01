@@ -136,7 +136,8 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
 
-        labels=("terraform-${{ inputs.stack }}-applied", "terraform-applied")
+        labels=("terraform-${{ inputs.stack }}-applied")
+        labels+=("terraform-applied")
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
         echo "Final labels: ${labels_final}"
@@ -156,4 +157,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
+        gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
