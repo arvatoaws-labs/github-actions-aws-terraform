@@ -131,6 +131,7 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-planned"
         labels=("terraform-${{ inputs.stack }}-planned")
         
         labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
@@ -140,14 +141,15 @@ jobs:
         if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
           then
             labels+=("terraform-${{ inputs.stack }}-plan-no_changes")
+            gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-plan-no_changes"
         fi
 
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
+        # curl \
+        #   -X POST \
+        #   https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
+        #   -H "Content-Type: application/json" \
+        #   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        #   -d "{\"labels\": $labels_final}"
         
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.stack }} (${{ inputs.environment }})" --repo ${{ github.repository }}
 
