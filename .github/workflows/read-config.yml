@@ -14,6 +14,8 @@ on:
         value: ${{ jobs.read-repo-config.outputs.accounts }}
       stacks:
         value: ${{ jobs.read-repo-config.outputs.stacks }}
+      labels:
+        value: ${{ jobs.get-pr-labels.outputs.labels }}
 
 jobs:
   read-repo-config:
@@ -73,3 +75,9 @@ jobs:
               echo "Error: ${{ inputs.config_file }} not found"
               exit 1
           fi
+      - name: read PR labels
+        id: get-pr-labels
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "LABELS"=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number || github.event.pull_request.number }} | jq '.labels | map( .name ) | join ( "," )') >> $GITHUB_OUTPUT
