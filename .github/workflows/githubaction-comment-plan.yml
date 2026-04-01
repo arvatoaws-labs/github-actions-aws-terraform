@@ -47,6 +47,7 @@ jobs:
     steps:
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
+      id: configure-aws-credentials
       uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-region: ${{ inputs.region }}
@@ -64,20 +65,24 @@ jobs:
 
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
+      id: configure-git-credentials
       with:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
+      id: checkout-pull-request
       uses: actions/checkout@v6
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
 
     - name: Reading Repository name
+      id: read-repository-name
       run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
       shell: bash
 
     - name: Reading Terraform variables from GitHub Secrets
+      id: read-github-secrets
       run: |
         SECRETS_JSON='${{ toJson(secrets) }}'
         SECRETS=$(echo "$SECRETS_JSON" | jq -r 'keys[]')
@@ -118,6 +123,7 @@ jobs:
           /usr/local/bin/aws --version
 
     - name: Add Successful labels to GitHub PR
+      id: add-success-labels-to-pull-request
       if: success()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -146,6 +152,7 @@ jobs:
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on ${{ inputs.stack }} (${{ inputs.environment }})" --repo ${{ github.repository }}
 
     - name: Add Failed labels to GitHub PR
+      id: add-failed-labels-to-pull-request
       if: failure()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
