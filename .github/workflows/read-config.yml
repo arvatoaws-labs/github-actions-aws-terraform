@@ -14,7 +14,7 @@ on:
         value: ${{ jobs.read-repo-config.outputs.accounts }}
       stacks:
         value: ${{ jobs.read-repo-config.outputs.stacks }}
-      labels:
+      pr-labels:
         value: ${{ jobs.read-repo-config.outputs.labels }}
 
 jobs:
@@ -32,7 +32,7 @@ jobs:
       config_data: ${{ steps.read-yaml.outputs.config_data }}
       accounts: ${{ steps.read-yaml.outputs.accounts }}
       stacks: ${{ steps.read-yaml.outputs.stacks }}
-      labels: ${{ steps.get-pr-labels.outputs.labels }}
+      pr-labels: ${{ steps.get-pr-labels.outputs.labels }}
 
     steps:
       - uses: actions/checkout@v6
