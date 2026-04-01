@@ -57,7 +57,7 @@ jobs:
                     echo "EOF"
                   } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '[(.accounts[] // []).stack]' ${{ inputs.config_file }})
+                  result=$(yq -o=json -I=0 '[.accounts[].stack]' ${{ inputs.config_file }})
                   {
                     echo "stacks<<EOF"
                     echo "$result"
