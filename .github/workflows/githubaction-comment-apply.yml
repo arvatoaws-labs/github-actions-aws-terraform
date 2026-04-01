@@ -1,7 +1,7 @@
 name: 'TofuApply'
 
 concurrency:
-  group: ${{ inputs.environment }}
+  group: ${{ inputs.stack }}
   cancel-in-progress: false
 
 on:
