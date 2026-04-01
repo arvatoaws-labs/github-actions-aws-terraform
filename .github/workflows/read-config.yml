@@ -14,6 +14,9 @@ on:
         value: ${{ jobs.read-repo-config.outputs.accounts }}
       stacks:
         value: ${{ jobs.read-repo-config.outputs.stacks }}
+      accounts_count: 
+        value: ${{ jobs.read-repo-config.outputs.accounts_count }}
+
 
 jobs:
   read-repo-config:
@@ -30,6 +33,7 @@ jobs:
       config_data: ${{ steps.read-yaml.outputs.config_data }}
       accounts: ${{ steps.read-yaml.outputs.accounts }}
       stacks: ${{ steps.read-yaml.outputs.stacks }}
+      accounts_count: ${{ steps.read-yaml.outputs.accounts_count }}
 
     steps:
       - uses: actions/checkout@v6
@@ -59,10 +63,13 @@ jobs:
                   result=$(yq -o=json -I=0 '(.accounts // []) | [.[] .stack]' ${{ inputs.config_file }})
                   {
                     echo "stacks<<EOF"
-                    echo "'$result'"
+                    echo "$result"
                     echo "EOF"
                   } >> "$GITHUB_OUTPUT"
                   
+                  result=$(yq -o=json -I=0 '.accounts | length' ${{ inputs.config_file }})
+                  echo "accounts_count=$result" >> "$GITHUB_OUTPUT"
+
                   echo "Successfully wrote config to GITHUB_OUTPUT"
               else
                   echo "Error: ${{ inputs.config_file }} contains invalid YAML"
