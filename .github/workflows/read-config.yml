@@ -59,7 +59,7 @@ jobs:
                   result=$(yq -o=json -I=0 '(.accounts // []) | [.[] .stack]' ${{ inputs.config_file }})
                   {
                     echo "stacks<<EOF"
-                    echo "$result"
+                    echo "'$result'"
                     echo "EOF"
                   } >> "$GITHUB_OUTPUT"
                   
