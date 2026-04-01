@@ -80,4 +80,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "LABELS"=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number || github.event.pull_request.number }} | jq '.labels | map( .name ) | join ( "," )') >> $GITHUB_OUTPUT
+          echo "labels"=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number || github.event.pull_request.number }} | jq '.labels | map( .name ) | join ( "," )') >> $GITHUB_OUTPUT
