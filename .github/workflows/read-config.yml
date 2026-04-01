@@ -42,7 +42,7 @@ jobs:
               # Validate JSON
               if yq eval '.' ${{ inputs.config_file }} > /dev/null 2>&1; then
 
-                result=$(yq -o=json -I=0 '.include = .accounts | del(.accounts)' ${{ inputs.config_file }})
+                result=$(yq -o=json -I=0 '.include = (.accounts // []) | del(.accounts)' ${{ inputs.config_file }})
                   # Use a heredoc to handle potential multiline data safely
                   {
                     echo "config_data<<EOF"
@@ -50,14 +50,14 @@ jobs:
                     echo "EOF"
                   } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '.accounts = .accounts' ${{ inputs.config_file }})
+                  result=$(yq -o=json -I=0 '.accounts = (.accounts // [])' ${{ inputs.config_file }})
                   {
                     echo "accounts<<EOF"
                     echo "$result"
                     echo "EOF"
                   } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '[.accounts[].stack]' ${{ inputs.config_file }})
+                  result=$(yq -o=json -I=0 '[(.accounts[] // []).stack]' ${{ inputs.config_file }})
                   {
                     echo "stacks<<EOF"
                     echo "$result"
