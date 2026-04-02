@@ -1,23 +1,15 @@
-name: 'BlockMerge'
+---
+name: "tf-block-merge"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
 
 jobs:
-  tofu:
-    name: 'Block Merge'
+  check-terraform-applied:
     runs-on: arvato
-    permissions:
-      id-token: write
-      contents: read
-      pull-requests: write
-    environment:
-      name: production
-    defaults:
-      run:
-        shell: bash
     steps:
-    - name: Block Merge
-      run: |
-        echo "Merge is still blocked, please review the PR comments. Plan & apply has to happen first. If they have, some issue in plan or apply must have occurred and needs to be fixed first."
-        exit 1
+      - name: Check for 'terraform-applied' label
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'terraform-applied') }}
+        run: |
+          echo "Blocking merge. Terraform not applied."
+          exit 1
