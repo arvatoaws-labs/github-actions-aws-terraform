@@ -1,5 +1,5 @@
 ---
-name: "tf-merge-block"
+name: "tf-merge"
 
 on:  # yamllint disable-line rule:truthy
   workflow_call:
