@@ -138,6 +138,10 @@ jobs:
 
         gh label create "terraform-${{ inputs.stack }}-applied" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
+
+        gh label create "terraform-applied" --color "008000" --force
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied" 
+
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
 
     - name: Merging Pull request
