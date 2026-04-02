@@ -131,7 +131,7 @@ jobs:
     - name: Add labels to GitHub PR
       id: add-labels-to-pull-request
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
@@ -144,6 +144,6 @@ jobs:
       id: merge-pull-request
       if: ${{ inputs.do_merge_on_success && success() }}
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
