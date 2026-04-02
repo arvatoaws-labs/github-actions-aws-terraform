@@ -1,114 +1,15 @@
 ---
-name: 'merge-check'
+name: "tf-merge-check"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
-    inputs:
-      github_event_number:
-        required: true
-        type: string
-      github_event_issue_comments_url:
-        required: true
-        type: string
-      repository:
-        required: true
-        type: string
 
 jobs:
-  read-config:
-    uses: ./.github/workflows/read-config.yml
-
-  get-labels:
+  check-terraform-applied:
     runs-on: arvato
-    # Required permissions
-    permissions:
-      actions: read
-      id-token: write
-      contents: read
-      pull-requests: write
-    outputs:
-      labels: ${{ steps.get_labels.outputs.labels }}
     steps:
-    - name: read PR labels
-      id: get_labels
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "LABELS"=$(gh api repos/${{ inputs.repository }}/pulls/${{ inputs.github_event_number }} | jq '.labels | map( .name ) | join ( "," )') >> $GITHUB_OUTPUT
-
-  merge-check:
-    runs-on: arvato
-    needs: [ get-labels, read-config ]
-    continue-on-error: true
-
-    outputs:
-      allow_merge: ${{ steps.env-merge-check.outputs.ALLOW_MERGE }}
-
-    # Required permissions
-    permissions:
-      actions: read
-      id-token: write
-      contents: read
-      pull-requests: write
-    strategy:
-      matrix: ${{ fromJSON(needs.read-config.outputs.config_data) }}
-    steps:
-    - name: Check if plans are successfully applied
-      id: env-merge-check
-      run: |
-        tf_changed=${{ contains ( needs.get-labels.outputs.labels, format('terraform-{0}-planned', matrix.environment) ) }}
-        tf_applied=${{ contains ( needs.get-labels.outputs.labels, format('terraform-{0}-applied', matrix.environment) ) }}
-        echo "Environment changed: $tf_changed"
-        echo "Plan applied: $tf_applied"
-        
-        if [[ "$tf_changed" == "true" ]]
-          then
-            if [ "$tf_applied" == "true" ]
-            then
-              exit 0
-            fi
-        else
-          exit 0
-        fi
-        
-        echo "ALLOW_MERGE=false" >> $GITHUB_OUTPUT
-
-  merging:
-    runs-on: arvato
-    needs: merge-check
-    # Required permissions
-    permissions:
-      actions: read
-      id-token: write
-      contents: write
-      pull-requests: write
-
-    if: ${{ success() }}
-    steps:
-
-    - name: Add label to GitHub PR
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        set -x
-        labels=("terraform-applied")
-
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
-        echo "Final labels: ${labels_final}"
-
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ inputs.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
-
-    - name: Merging Pull request
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-
-        if [[ "${{ toJSON(needs.merge-check.outputs.allow_merge) }}" != "false" ]]
-          then
-            gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
-        fi
+      - name: Check for 'terraform-applied' label
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'terraform-applied') && contains(github.event.pull_request.labels.*.name, 'terraform-changed')}}
+        run: |
+          echo "Blocking merge. Terraform not applied."
+          exit 1
