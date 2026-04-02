@@ -119,6 +119,7 @@ jobs:
 
     - name: Add Successful labels to GitHub PR
       id: add-success-labels-to-pull-request
+
       if: success()
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -126,8 +127,13 @@ jobs:
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
-        gh auth status
-        gh api user -q ".login"
+        if [ -z "$GH_TOKEN" ]; then
+            echo "The variable GH_TOKEN is EMPTY."
+          else
+            echo "The variable GH_TOKEN is POPULATED."
+            gh auth status
+          fi
+        gh api user
         
         gh label create "terraform-${{ inputs.stack }}-planned" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-planned"
