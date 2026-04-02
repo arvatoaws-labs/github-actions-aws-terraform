@@ -138,21 +138,11 @@ jobs:
         
         gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
 
-        labels=("test")
-        labels_final="$(jq --compact-output --null-input '$ARGS.positional' --args -- "${labels[@]}")"
-        echo "Final labels: ${labels_final}"
-        curl \
-          -X POST \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ inputs.github_event_number }}/labels \
-          -H "Content-Type: application/json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -d "{\"labels\": $labels_final}"
-
     - name: Add Failed labels to GitHub PR
       id: add-failed-labels-to-pull-request
       if: failure()
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
