@@ -77,7 +77,29 @@ jobs:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
         fetch-depth: 0
 
-    - name: Check branch status
+    - name: Check branch status (on pull request)
+      if: github.event_name == 'pull_request'
+      run: |
+        # Fetch the base branch (e.g., main)
+        git fetch origin ${{ github.base_ref }}
+        
+        # Find the latest commit on the base branch
+        BASE_SHA=$(git rev-parse origin/${{ github.base_ref }})
+        
+        # Find the common ancestor (merge base) between the PR and the Base
+        MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+        
+        if [ "$BASE_SHA" = "$MERGE_BASE" ]; then
+          echo "Branch is up to date."
+          echo "is_outdated=false" >> $GITHUB_OUTPUT
+        else
+          echo "Branch is OUT OF DATE. Please merge or rebase."
+          echo "is_outdated=true" >> $GITHUB_OUTPUT
+          exit 1 # Fail the step if it's out of date
+        fi
+
+    - name: Check branch status (on issue comment)
+      if: github.event.issue.pull_request
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
