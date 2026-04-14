@@ -88,6 +88,54 @@ jobs:
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
 
+    - name: Check branch status (on pull request)
+      if: github.event_name == 'pull_request'
+      run: |
+        # Fetch the base branch (e.g., main)
+        git fetch origin ${{ github.base_ref }}
+        
+        # Find the latest commit on the base branch
+        BASE_SHA=$(git rev-parse origin/${{ github.base_ref }})
+        
+        # Find the common ancestor (merge base) between the PR and the Base
+        MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+        
+        if [ "$BASE_SHA" = "$MERGE_BASE" ]; then
+          echo "Branch is up to date."
+          echo "is_outdated=false" >> $GITHUB_OUTPUT
+        else
+          echo "Branch is OUT OF DATE. Please merge or rebase."
+          echo "is_outdated=true" >> $GITHUB_OUTPUT
+          exit 1 # Fail the step if it's out of date
+        fi
+
+    - name: Check branch status (on issue comment)
+      if: github.event.issue.pull_request
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # 1. Get branch info via GitHub CLI
+        PR_DATA=$(gh pr view ${{ github.event.issue.number }} --json baseRefName,headRefName)
+        BASE_BRANCH=$(echo $PR_DATA | jq -r '.baseRefName')
+        HEAD_BRANCH=$(echo $PR_DATA | jq -r '.headRefName')
+
+        echo "Comparing $HEAD_BRANCH against $BASE_BRANCH"
+
+        # 2. Fetch both branches explicitly
+        git fetch origin $BASE_BRANCH:$BASE_BRANCH
+        git fetch origin $HEAD_BRANCH:$HEAD_BRANCH
+
+        # 3. Compare
+        BASE_SHA=$(git rev-parse $BASE_BRANCH)
+        MERGE_BASE=$(git merge-base $HEAD_BRANCH $BASE_BRANCH)
+
+        if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
+          echo "::error::PR branch is out of date with $BASE_BRANCH"
+          exit 1
+        else
+          echo "PR is up to date!"
+        fi
+
     - name: Reading Terraform variables from GitHub Secrets
       id: read-github-secrets
       run: |
