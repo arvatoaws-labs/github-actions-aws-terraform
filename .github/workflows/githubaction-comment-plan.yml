@@ -77,18 +77,27 @@ jobs:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
         fetch-depth: 0
 
-    - name: Compare branches
+    - name: Check branch status
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Fetch the base branch (e.g., main)
-        git fetch origin ${{ github.base_ref }}
-        
-        # Find the common ancestor
-        BASE_SHA=$(git rev-parse origin/${{ github.base_ref }})
-        MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+        # 1. Get branch info via GitHub CLI
+        PR_DATA=$(gh pr view ${{ github.event.issue.number }} --json baseRefName,headRefName)
+        BASE_BRANCH=$(echo $PR_DATA | jq -r '.baseRefName')
+        HEAD_BRANCH=$(echo $PR_DATA | jq -r '.headRefName')
+
+        echo "Comparing $HEAD_BRANCH against $BASE_BRANCH"
+
+        # 2. Fetch both branches explicitly
+        git fetch origin $BASE_BRANCH:$BASE_BRANCH
+        git fetch origin $HEAD_BRANCH:$HEAD_BRANCH
+
+        # 3. Compare
+        BASE_SHA=$(git rev-parse $BASE_BRANCH)
+        MERGE_BASE=$(git merge-base $HEAD_BRANCH $BASE_BRANCH)
 
         if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
-          echo "Error: The PR branch is out of date with ${{ github.base_ref }}."
-          echo "Please merge or rebase the latest changes from the base branch."
+          echo "::error::PR branch is out of date with $BASE_BRANCH"
           exit 1
         else
           echo "PR is up to date!"
