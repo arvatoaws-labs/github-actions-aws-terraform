@@ -75,6 +75,7 @@ jobs:
       uses: actions/checkout@v6
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
+        fetch-depth: 0
 
     - name: Compare branches
       run: |
