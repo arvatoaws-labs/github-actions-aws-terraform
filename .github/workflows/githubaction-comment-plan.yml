@@ -76,6 +76,23 @@ jobs:
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
 
+    - name: Compare branches
+      run: |
+        # Fetch the base branch (e.g., main)
+        git fetch origin ${{ github.base_ref }}
+        
+        # Find the common ancestor
+        BASE_SHA=$(git rev-parse origin/${{ github.base_ref }})
+        MERGE_BASE=$(git merge-base HEAD origin/${{ github.base_ref }})
+
+        if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
+          echo "Error: The PR branch is out of date with ${{ github.base_ref }}."
+          echo "Please merge or rebase the latest changes from the base branch."
+          exit 1
+        else
+          echo "PR is up to date!"
+        fi
+
     - name: Reading Terraform variables from GitHub Secrets
       id: read-github-secrets
       run: |
