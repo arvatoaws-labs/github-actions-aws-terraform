@@ -114,6 +114,9 @@ jobs:
       env:
         GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
+        set -x
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
+        
         # 1. Get branch info via GitHub CLI
         PR_DATA=$(gh pr view ${{ github.event.issue.number }} --json baseRefName,headRefName)
         BASE_BRANCH=$(echo $PR_DATA | jq -r '.baseRefName')
