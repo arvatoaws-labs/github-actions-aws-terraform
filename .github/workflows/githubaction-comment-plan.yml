@@ -212,6 +212,8 @@ jobs:
 
     - name: Report Results
       if: always()
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         if [ -s error_log.txt ]; then
           gh pr comment ${{ inputs.github_event_number }} --body-file error_log.txt --repo ${{ github.repository }}MARY
