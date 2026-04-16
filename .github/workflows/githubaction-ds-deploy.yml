@@ -11,6 +11,8 @@ jobs:
     permissions:
       actions: read
       id-token: write
+      contents: read
+      pages: write
 
     steps:
       # Get the github token with access to the relevant repositories from the app
