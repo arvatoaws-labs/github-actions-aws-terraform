@@ -116,7 +116,7 @@ jobs:
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
-        
+
         # 1. Get branch info via GitHub CLI
         PR_DATA=$(gh pr view ${{ github.event.issue.number }} --json baseRefName,headRefName)
         BASE_BRANCH=$(echo $PR_DATA | jq -r '.baseRefName')
@@ -134,8 +134,7 @@ jobs:
 
         if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
           echo "::error::PR branch is out of date with $BASE_BRANCH"
-          gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
-
+          echo "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
           exit 1
         else
           echo "PR is up to date!"
@@ -195,7 +194,7 @@ jobs:
         gh label create "terraform-applied" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied" 
 
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
+        echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
     - name: Merging Pull request
       id: merge-pull-request
@@ -204,3 +203,12 @@ jobs:
         GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
+
+    - name: Report Results
+      if: always()
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
+        if [ -s error_log.txt ]; then
+          gh pr comment ${{ inputs.github_event_number }} --body-file error_log.txt --repo ${{ github.repository }}
+        fi
