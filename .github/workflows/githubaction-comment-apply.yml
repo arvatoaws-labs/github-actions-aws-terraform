@@ -91,6 +91,9 @@ jobs:
     - name: Check branch status (on pull request)
       if: github.event_name == 'pull_request'
       run: |
+        set -x
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
+        
         # Fetch the base branch (e.g., main)
         git fetch origin ${{ github.base_ref }}
         
