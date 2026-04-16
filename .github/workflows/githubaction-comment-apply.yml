@@ -112,7 +112,7 @@ jobs:
     - name: Check branch status (on issue comment)
       if: github.event.issue.pull_request
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         # 1. Get branch info via GitHub CLI
         PR_DATA=$(gh pr view ${{ github.event.issue.number }} --json baseRefName,headRefName)
@@ -131,6 +131,8 @@ jobs:
 
         if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
           echo "::error::PR branch is out of date with $BASE_BRANCH"
+          gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
+
           exit 1
         else
           echo "PR is up to date!"
