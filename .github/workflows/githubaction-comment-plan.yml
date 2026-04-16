@@ -99,7 +99,7 @@ jobs:
           echo "Branch is up to date."
           echo "is_outdated=false" >> $GITHUB_OUTPUT
         else
-          echo "$TIMESTAMP: PR branch is out of date with ${{ github.base_ref }} - **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
+          echo "$TIMESTAMP: PR branch is out of date with **${{ github.base_ref }}** - **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
           echo "is_outdated=true" >> $GITHUB_OUTPUT
           exit 1 # Fail the step if it's out of date
