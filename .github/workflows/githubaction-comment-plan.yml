@@ -45,6 +45,9 @@ jobs:
     if: ${{ inputs.execute == true }}
 
     steps:
+    - name: Initialize Error Log
+      run: touch error_log.txt
+
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       id: configure-aws-credentials
@@ -105,7 +108,7 @@ jobs:
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
-        
+
         # 1. Get branch info via GitHub CLI
         PR_DATA=$(gh pr view ${{ github.event.issue.number }} --json baseRefName,headRefName)
         BASE_BRANCH=$(echo $PR_DATA | jq -r '.baseRefName')
@@ -122,7 +125,7 @@ jobs:
         MERGE_BASE=$(git merge-base $HEAD_BRANCH $BASE_BRANCH)
 
         if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
-          gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
+          echo "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
           echo "::error::PR branch is out of date with $BASE_BRANCH"
           exit 1
@@ -190,7 +193,8 @@ jobs:
             gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-plan-no_changes"
         fi
         
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
+        # gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan successful on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
+        echo "$TIMESTAMP: Tofu plan successful on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
     - name: Add Failed labels to GitHub PR
       id: add-failed-labels-to-pull-request
@@ -203,4 +207,12 @@ jobs:
 
         gh label create "terraform-${{ inputs.stack }}-failed" --color "ff0000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-failed"
-        gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
+        # gh pr comment ${{ inputs.github_event_number }} --body "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" --repo ${{ github.repository }}
+        echo "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
+
+    - name: Report Results
+      if: always()
+      run: |
+        if [ -s error_log.txt ]; then
+          gh pr comment ${{ inputs.github_event_number }} --body-file error_log.txt --repo ${{ github.repository }}MARY
+        fi
