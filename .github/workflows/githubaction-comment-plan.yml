@@ -96,7 +96,8 @@ jobs:
           echo "Branch is up to date."
           echo "is_outdated=false" >> $GITHUB_OUTPUT
         else
-          echo "Branch is OUT OF DATE. Please merge or rebase."
+          echo "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH - **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
+
           echo "is_outdated=true" >> $GITHUB_OUTPUT
           exit 1 # Fail the step if it's out of date
         fi
@@ -125,7 +126,7 @@ jobs:
         MERGE_BASE=$(git merge-base $HEAD_BRANCH $BASE_BRANCH)
 
         if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
-          echo "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
+          echo "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH - **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
           echo "::error::PR branch is out of date with $BASE_BRANCH"
           exit 1
