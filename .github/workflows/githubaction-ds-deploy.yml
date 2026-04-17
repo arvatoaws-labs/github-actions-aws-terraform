@@ -55,7 +55,7 @@ jobs:
         if: steps.check-local-docusaurus.outputs.exists == 'false'
         id: checkout-docusaurus
         with:
-          repository: arvatoaws/terraform-repo-emma-serverless
+          repository: arvatoaws/documentation-hub
           token: ${{ steps.generate-token.outputs.token }}
           path: tmp
           sparse-checkout: |
