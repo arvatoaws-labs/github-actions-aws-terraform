@@ -90,7 +90,6 @@ jobs:
           rm -rf documentation-hub/docs/${{ github.event.repository.name }}
           mkdir -p documentation-hub/docs/${{ github.event.repository.name }}
           cp -r docs/. documentation-hub/docs/${{ github.event.repository.name }}
-          cd documentation-hub
 
           touch documentation-hub/docs/${{ github.event.repository.name }}/_category_.yml
           cat <<EOF > documentation-hub/docs/${{ github.event.repository.name }}/_category_.yml
@@ -103,6 +102,7 @@ jobs:
             title: ${{ github.event.repository.name }}
           EOF
 
+          cd documentation-hub
           # Use the App's bot name and email for the commit record
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
