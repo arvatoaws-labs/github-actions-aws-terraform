@@ -70,20 +70,20 @@ jobs:
           mkdir -p docs
           cp -r documentation-hub/docusaurus/docs/. docs
 
-      - name: copy local docs folder to documentation hub
-        run: |
-          mkdir -p documentation-hub/docs/repositories/${{ github.event.repository.name }}
-          cp -r docs/. documentation-hub/docs/repositories/${{ github.event.repository.name }}
-          ls -l documentation-hub/docs
-
-      - name: link account readme file
-        id: link-account-readme
+      - name: copy account readme files
+        id: copy-account-readme
         run: |
           # Use a while loop to be safer with spaces or special characters
           echo '${{ steps.read-config.outputs.stacks }}' | jq -r '.[]' | while read -r stack; do
             cp $stack/README.md ${{ github.workspace }}/docs/accounts/$stack.md
           done
         shell: bash
+
+      - name: copy local docs folder to documentation hub
+        run: |
+          mkdir -p documentation-hub/docs/repositories/${{ github.event.repository.name }}
+          cp -r docs/. documentation-hub/docs/repositories/${{ github.event.repository.name }}
+          ls -lR documentation-hub/docs/repositories
 
       - uses: actions/setup-node@v6
         with:
