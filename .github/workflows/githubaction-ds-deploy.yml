@@ -2,6 +2,11 @@ name: ds-deploy
 
 on:
   workflow_call:
+    inputs:
+      upload:
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   build:
@@ -79,9 +84,10 @@ jobs:
           done
         shell: bash
 
-      - name: copy local docs folder to documentation hub
+      - name: upload local docs folder to documentation hub
+        if: inputs.upload == 'true'
         run: |
-          rmd -rf documentation-hub/docs/repositories/${{ github.event.repository.name }}
+          rm -rf documentation-hub/docs/repositories/${{ github.event.repository.name }}
           mkdir -p documentation-hub/docs/repositories/${{ github.event.repository.name }}
           cp -r docs/. documentation-hub/docs/repositories/${{ github.event.repository.name }}
           ls -lR documentation-hub/docs/repositories
