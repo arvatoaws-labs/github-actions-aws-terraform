@@ -33,6 +33,13 @@ jobs:
         id: read-config
         uses: arvatoaws-labs/github-actions-aws-terraform/actions/github-action-read-config@v2
 
+      - uses: actions/checkout@v6
+        id: checkout-documentation-hub
+        with:
+          repository: arvatoaws/documentation-hub
+          token: ${{ steps.generate-token.outputs.token }}
+          path: documentation-hub
+
       - name: Check if docusaurus directory exists
         id: check-local-docusaurus
         run: |
@@ -51,39 +58,17 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - uses: actions/checkout@v6
-        if: steps.check-local-docusaurus.outputs.exists == 'false'
-        id: checkout-docusaurus
-        with:
-          repository: arvatoaws/documentation-hub
-          token: ${{ steps.generate-token.outputs.token }}
-          path: tmp
-          sparse-checkout: |
-            docusaurus
-          sparse-checkout-cone-mode: false
-
-      - uses: actions/checkout@v6
-        id: checkout-documentation-hub
-        with:
-          repository: arvatoaws/documentation-hub
-          token: ${{ steps.generate-token.outputs.token }}
-          path: documentation-hub
-
-      - name: debug
-        run: |
-          ls -l documentation-hub
-
       - name: Sync Remote docusaurus to local checkout
         if: steps.check-local-docusaurus.outputs.exists == 'false'
         run: |
           mkdir -p docusaurus
-          cp -r tmp/docusaurus/. docusaurus
+          cp -r documentation-hub/docusaurus/. docusaurus
 
       - name: copy default docs folder to local checkout
         if: steps.check-local-docs.outputs.exists == 'false'
         run: |
           mkdir -p docs
-          cp -r docusaurus/docs/. docs
+          cp -r documentation-hub/docusaurus/docs/. docs
 
       - name: link account readme file
         id: link-account-readme
