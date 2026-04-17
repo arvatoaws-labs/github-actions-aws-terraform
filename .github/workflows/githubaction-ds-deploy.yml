@@ -70,6 +70,12 @@ jobs:
           mkdir -p docs
           cp -r documentation-hub/docusaurus/docs/. docs
 
+      - name: copy local docs folder to documentation hub
+        run: |
+          mkdir -p documentation-hub/docs/${{ github.repository }}
+          cp -r docs/. documentation-hub/docs/${{ github.repository }}
+          ls -l documentation-hub/docs
+
       - name: link account readme file
         id: link-account-readme
         run: |
