@@ -71,7 +71,7 @@ jobs:
 
       - name: debug
         run: |
-          ls -l tmp
+          ls -l tmp/documentation-hub
 
       - name: Sync Remote docusaurus to local checkout
         if: steps.check-local-docusaurus.outputs.exists == 'false'
