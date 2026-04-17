@@ -62,6 +62,17 @@ jobs:
             docusaurus
           sparse-checkout-cone-mode: false
 
+      - uses: actions/checkout@v6
+        id: checkout-documentation-hub
+        with:
+          repository: arvatoaws/documentation-hub
+          token: ${{ steps.generate-token.outputs.token }}
+          path: tmp/documentation-hub
+
+      - name: debug
+        run: |
+          ls -l tmp
+
       - name: Sync Remote docusaurus to local checkout
         if: steps.check-local-docusaurus.outputs.exists == 'false'
         run: |
