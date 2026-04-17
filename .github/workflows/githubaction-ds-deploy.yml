@@ -72,8 +72,8 @@ jobs:
 
       - name: copy local docs folder to documentation hub
         run: |
-          mkdir -p documentation-hub/docs/${{ github.repository }}
-          cp -r docs/. documentation-hub/docs/${{ github.repository }}
+          mkdir -p documentation-hub/docs/repositories/${{ github.event.repository.name }}
+          cp -r docs/. documentation-hub/docs/repositories/${{ github.event.repository.name }}
           ls -l documentation-hub/docs
 
       - name: link account readme file
