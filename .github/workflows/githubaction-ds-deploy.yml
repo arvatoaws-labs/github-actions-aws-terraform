@@ -6,7 +6,7 @@ on:
       upload:
         required: false
         type: boolean
-        default: true
+        default: false
 
 jobs:
   build:
@@ -90,7 +90,6 @@ jobs:
           rm -rf documentation-hub/docs/repositories/${{ github.event.repository.name }}
           mkdir -p documentation-hub/docs/repositories/${{ github.event.repository.name }}
           cp -r docs/. documentation-hub/docs/repositories/${{ github.event.repository.name }}
-          ls -lR documentation-hub/docs/repositories
 
           cd documentation-hub
           # Use the App's bot name and email for the commit record
