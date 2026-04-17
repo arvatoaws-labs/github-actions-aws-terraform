@@ -81,6 +81,7 @@ jobs:
 
       - name: copy local docs folder to documentation hub
         run: |
+          rmd -rf documentation-hub/docs/repositories/${{ github.event.repository.name }}
           mkdir -p documentation-hub/docs/repositories/${{ github.event.repository.name }}
           cp -r docs/. documentation-hub/docs/repositories/${{ github.event.repository.name }}
           ls -lR documentation-hub/docs/repositories
@@ -91,7 +92,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           git add .
-          git commit -m "chore: automated update via GitHub App"
+          git commit -m "chore: automated update of documentation for repo ${{ github.event.repository.name }}"
           git push
 
       - uses: actions/setup-node@v6
