@@ -144,6 +144,7 @@ jobs:
         run: npm run build
 
       - name: Upload Build Artifact
+        if: inputs.create_local
         uses: actions/upload-pages-artifact@v5
         with:
           path: docusaurus/build
