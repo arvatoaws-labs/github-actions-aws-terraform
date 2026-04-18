@@ -10,6 +10,9 @@ on:
       customer:
         type: string
         default: internal
+      create_local:
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -145,6 +148,8 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     needs: build
+
+    if: inputs.create_local
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
