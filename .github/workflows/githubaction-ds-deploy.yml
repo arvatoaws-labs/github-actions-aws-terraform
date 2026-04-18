@@ -97,14 +97,14 @@ jobs:
 
             touch documentation-hub/docs/${{ inputs.customer }}/${{ github.event.repository.name }}/_category_.yml
             cat <<EOF > documentation-hub/docs/${{ inputs.customer }}/${{ github.event.repository.name }}/_category_.yml
-            position: 1
-            label: ${{ github.event.repository.name }}
-            collapsible: true
-            collapsed: true
-            link:
-              type: generated-index
-              title: ${{ github.event.repository.name }}
-            EOF
+          position: 1
+          label: ${{ github.event.repository.name }}
+          collapsible: true
+          collapsed: true
+          link:
+            type: generated-index
+            title: ${{ github.event.repository.name }}
+          EOF
 
             cd documentation-hub
             # Use the App's bot name and email for the commit record
