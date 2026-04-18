@@ -79,7 +79,7 @@ jobs:
         if: steps.check-local-docs.outputs.exists == 'false'
         run: |
           mkdir -p docs
-          cp -r documentation-hub/docusaurus/docs/. docs
+          cp -r documentation-hub/default/docs/. docs
 
       - name: copy account readme files
         id: copy-account-readme
