@@ -13,6 +13,12 @@ on:
       create_local:
         type: boolean
         default: false
+      repository_type:
+        type: string
+        default: other
+      repository_name:
+        type: string
+        default: ${{ github.event.repository.name }}
 
 jobs:
   build:
@@ -94,20 +100,19 @@ jobs:
         if: inputs.upload == true
         run: |
           if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}" ]; then
-            rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ github.event.repository.name }}
-            mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ github.event.repository.name }}
-            cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ github.event.repository.name }}
+            rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}
+            mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}
+            cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}
 
-            touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ github.event.repository.name }}/_category_.yml
-            cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ github.event.repository.name }}/_category_.yml
+            touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}/_category_.yml
+            cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/_category_.yml
           position: 1
-          label: ${{ github.event.repository.name }}
+          label: ${{ inputs.repository_name }}
           collapsible: true
           collapsed: true
           link:
             type: generated-index
-            title: ${{ github.event.repository.name }}
-          EOF
+            title: ${{ inputs.repository_name }}
 
             cd documentation-hub
             # Use the App's bot name and email for the commit record
@@ -118,7 +123,7 @@ jobs:
             if [ -z "$(git status --porcelain)" ]; then
               echo "No changes to commit. Skipping."
             else
-              git commit -m "chore: automated update of documentation for repo ${{ github.event.repository.name }}"
+              git commit -m "chore: automated update of documentation for repo ${{ inputs.repository_name }}"
               git push
             fi
           else
