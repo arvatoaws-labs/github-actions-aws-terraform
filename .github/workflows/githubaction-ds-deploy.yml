@@ -100,7 +100,8 @@ jobs:
         if: inputs.upload == true
         run: |
           if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}" ]; then
-            if [ ! -d "documentation-hub/docs/customer/${{ inputs.repository_type }}/${{ inputs.customer }}" ]; then
+            if [ ! -d "documentation-hub/docs/customer/${{ inputs.repository_type }}" ]; then
+              mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}
               touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/_category_.yml
               cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/_category_.yml
           position: 1
