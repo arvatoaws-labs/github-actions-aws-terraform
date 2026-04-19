@@ -100,11 +100,11 @@ jobs:
         if: inputs.upload == true
         run: |
           if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}" ]; then
-            rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}
-            mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}
-            cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}
+            rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
+            mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
+            cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
 
-            touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ inputs.repository_name }}/_category_.yml
+            touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}/_category_.yml
             cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/_category_.yml
           position: 1
           label: ${{ inputs.repository_name }}
@@ -123,7 +123,7 @@ jobs:
             if [ -z "$(git status --porcelain)" ]; then
               echo "No changes to commit. Skipping."
             else
-              git commit -m "chore: automated update of documentation for repo ${{ inputs.repository_name }}"
+              git commit -m "chore: automated update of documentation for repo ${{ github.event.repository.name }}"
               git push
             fi
           else
