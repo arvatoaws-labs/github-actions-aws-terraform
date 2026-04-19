@@ -100,8 +100,7 @@ jobs:
         if: inputs.upload == true
         run: |
           if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}" ]; then
-            if [ -d "documentation-hub/docs/customer/${{ inputs.repository_type }}/${{ inputs.customer }}" ]; then
-            else
+            if [ ! -d "documentation-hub/docs/customer/${{ inputs.repository_type }}/${{ inputs.customer }}" ]; then
               cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/_category_.yml
           position: 1
           label: ${{ inputs.repository_type }}
