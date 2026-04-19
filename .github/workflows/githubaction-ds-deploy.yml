@@ -100,6 +100,11 @@ jobs:
         if: inputs.upload == true
         run: |
           if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}" ]; then
+            if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}" ]; then
+            else
+              mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}
+            fi
+
             rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
             mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
             cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
