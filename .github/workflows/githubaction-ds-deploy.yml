@@ -104,7 +104,7 @@ jobs:
               mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}
               touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/_category_.yml
               cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/_category_.yml
-          position: 1
+          position: 2
           label: ${{ inputs.repository_type }}
           collapsible: true
           collapsed: true
@@ -120,7 +120,7 @@ jobs:
 
             touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}/_category_.yml
             cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}/_category_.yml
-          position: 1
+          position: 2
           label: ${{ inputs.repository_name }}
           collapsible: true
           collapsed: true
