@@ -87,8 +87,9 @@ jobs:
           mkdir -p docs
           cp -r documentation-hub/default/docs/. docs
 
-      - name: copy account readme files
-        id: copy-account-readme
+      - name: copy account readme files for repositories of type Terraform
+        if: inputs.repository_type == 'Terraform'
+        id: copy-account-readme-terraform
         run: |
           # Use a while loop to be safer with spaces or special characters
           echo '${{ steps.read-config.outputs.stacks }}' | jq -r '.[]' | while read -r stack; do
