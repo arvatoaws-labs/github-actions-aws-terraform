@@ -122,7 +122,7 @@ jobs:
 
             if [ ! -d "documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}" ]; then
               echo 'creating folder documentation-hub/docs/customer/${{ inputs.customer }}/v${{ inputs.project }}/${{ inputs.repository_type }}'
-              mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/v${{ inputs.project }}/${{ inputs.repository_type }}
+              mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}
               touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/_category_.yml
               cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/_category_.yml
           position: 2
