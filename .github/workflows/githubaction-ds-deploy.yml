@@ -82,7 +82,7 @@ jobs:
         if: steps.check-local-docusaurus.outputs.exists == 'false'
         run: |
           mkdir -p docusaurus
-          cp -r documentation-hub/docusaurus/. docusaurus
+          cp -r documentation-hub/default/docusaurus/. docusaurus
 
       - name: copy default docs folder to local checkout
         if: steps.check-local-docs.outputs.exists == 'false'
