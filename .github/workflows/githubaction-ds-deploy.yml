@@ -119,28 +119,13 @@ jobs:
             title: ${{ inputs.project }}
           EOF
             fi
-
-            if [ ! -d "documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}" ]; then
-              echo 'creating folder documentation-hub/docs/customer/${{ inputs.customer }}/v${{ inputs.project }}/${{ inputs.repository_type }}'
-              mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}
-              touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/_category_.yml
-              cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/_category_.yml
-          position: 2
-          label: ${{ inputs.repository_type }}
-          collapsible: true
-          collapsed: true
-          link:
-            type: generated-index
-            title: ${{ inputs.repository_type }}
-          EOF
-            fi
             
-            rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
-            mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
-            cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}
+            rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}
+            mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}
+            cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}
 
-            touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}/_category_.yml
-            cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ inputs.repository_type }}/${{ github.event.repository.name }}/_category_.yml
+            touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml
+            cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml
           position: 2
           label: ${{ inputs.repository_name }}
           collapsible: true
