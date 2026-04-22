@@ -107,9 +107,9 @@ jobs:
 
             if [ ! -d "documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}" ]; then
               echo 'creating folder documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}'
-              mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}
-              touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml
-              cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml
+              mkdir -p 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}'
+              touch 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml'
+              cat <<EOF > 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml'
           position: 2
           label: ${{ inputs.project }}
           collapsible: true
@@ -120,12 +120,12 @@ jobs:
           EOF
             fi
             
-            rm -rf documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}
-            mkdir -p documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}
-            cp -r docs/. documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}
+            rm -rf 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
+            mkdir -p 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
+            cp -r docs/. 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
 
-            touch documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml
-            cat <<EOF > documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml
+            touch 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml'
+            cat <<EOF > 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml'
           position: 2
           label: ${{ inputs.repository_name }}
           collapsible: true
