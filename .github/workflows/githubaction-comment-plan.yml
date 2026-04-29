@@ -5,6 +5,10 @@ on:
     types: [created]
   workflow_call:
     inputs:
+      github_app_owner:
+        required: false
+        type: string
+        default: arvatoaws
       region:
         required: true
         type: string
