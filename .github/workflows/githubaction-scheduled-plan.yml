@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   workflow_call:
     inputs:
+      github_app_owner:
+        required: false
+        type: string
+        default: arvatoaws
       region:
         required: true
         type: string
@@ -41,7 +45,7 @@ jobs:
       with:
         app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        owner: arvatoaws
+        owner: ${{ inputs.github_app_owner }}
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
@@ -56,7 +60,7 @@ jobs:
       env:
         OPENTOFU_VERSION: 1.11.5
         TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+          github.com=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
@@ -68,7 +72,7 @@ jobs:
       env:
         OPENTOFU_VERSION: 1.11.5
         TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+          github.com=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
