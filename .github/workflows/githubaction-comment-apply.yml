@@ -169,7 +169,7 @@ jobs:
         var_file: |
           secret_variables.tfvars
       env:
-        OPENTOFU_VERSION: 1.11.5
+        OPENTOFU_VERSION: "= 1.11.5"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
