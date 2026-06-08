@@ -1,5 +1,8 @@
 name: 'TofuPlan'
 
+env:
+  OPENTOFU_VERSION: "1.11.8"
+  
 on:
   workflow_call:
     inputs:
@@ -30,6 +33,7 @@ on:
         required: true
         type: boolean
         default: false
+
 jobs:
   tofu:
     name: 'Plan Tofu'
@@ -164,7 +168,6 @@ jobs:
         var_file: |
           secret_variables.tfvars
       env:
-        OPENTOFU_VERSION: "~> 1.11.5"
         TF_PLAN_COLLAPSE_LENGTH: 1000  # Set this high to keep it expanded
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
