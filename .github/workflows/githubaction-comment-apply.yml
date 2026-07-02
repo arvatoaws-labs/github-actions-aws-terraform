@@ -41,6 +41,22 @@ on:
         required: false
         type: boolean
         default: true
+    secrets: # 2. Explicitly declare required secrets for cross-org calls
+      TERRAFORM_GITHUB_ACTION_CLIENT_ID:
+        required: true
+      TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
+        required: true
+      TERRAFORM_GITHUB_ACTION_APP_ID:
+        required: true
+      TF_VAR_SDMSI_SUBSCRIPTION_KEY:
+        required: true
+      TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY:
+        required: true
+      TF_VAR_SDMS_AUTH_RESOURCE:
+        required: true
+      TF_VAR_SDMS_CLIENT_SECRET:
+        required: true
+
 jobs:
   tofu:
     name: 'Apply Tofu'
