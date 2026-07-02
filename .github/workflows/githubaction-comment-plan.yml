@@ -1,7 +1,7 @@
 name: 'TofuPlan'
 
 env:
-  OPENTOFU_VERSION: "1.11.8"
+  OPENTOFU_VERSION: "1.12.3"
   
 on:
   workflow_call:
