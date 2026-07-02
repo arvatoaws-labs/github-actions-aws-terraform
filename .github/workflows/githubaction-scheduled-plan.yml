@@ -22,6 +22,10 @@ on:
         required: true
         type: boolean
         default: false
+      owner:
+        required: false
+        type: string
+        default: "arvatoaws"
 
 jobs:
   tofu:
@@ -50,7 +54,7 @@ jobs:
       with:
         client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        owner: arvatoaws
+        owner: ${{ inputs.owner }}
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
@@ -85,7 +89,7 @@ jobs:
         var_file: |
           secret_variables.tfvars
       env:
-        OPENTOFU_VERSION: 1.12.3
+        OPENTOFU_VERSION: 1.11.5
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
