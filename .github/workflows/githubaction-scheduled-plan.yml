@@ -33,7 +33,14 @@ on:
         required: true
       TERRAFORM_GITHUB_ACTION_APP_ID:
         required: true
-
+      TF_VAR_SDMSI_SUBSCRIPTION_KEY:
+        required: true
+      TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY:
+        required: true
+      TF_VAR_SDMS_AUTH_RESOURCE:
+        required: true
+      TF_VAR_SDMS_CLIENT_SECRET:
+        required: true
 jobs:
   tofu:
     name: 'Plan Tofu'
