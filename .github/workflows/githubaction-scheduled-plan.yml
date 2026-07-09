@@ -14,10 +14,6 @@ on:
         required: false
         type: string
         default: "."
-      profiles:
-        required: false
-        type: string
-        default: "[]"
       environment:
         required: false
         type: string
@@ -46,32 +42,6 @@ on:
       TF_VAR_SDMS_CLIENT_SECRET:
         required: true
 jobs:
-  create-profiles:
-    name: 'Create Profiles'
-    runs-on: arvato
-    permissions:
-      actions: read
-      id-token: write
-      contents: read
-      pull-requests: write
-    defaults:
-      run:
-        shell: bash
-
-    strategy:
-      # Define your array of parameters here
-      matrix:
-        profile:  ${{ fromJson(inputs.profiles) }}
-
-    steps:
-    - name: Configure AWS Credentials via Profile ${{ matrix.profile.name }}
-      id: configure-aws-credentials
-      uses: aws-actions/configure-aws-credentials@v6
-      with:
-        aws-region: ${{ matrix.profile.region }}
-        role-to-assume: ${{ matrix.profile.roleArn }}
-        aws-profile: ${{ matrix.profile.name }}
-
   tofu:
     name: 'Plan Tofu'
     runs-on: arvato
