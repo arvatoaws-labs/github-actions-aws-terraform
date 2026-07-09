@@ -25,6 +25,10 @@ on:
         required: false
         type: string
         default: "."
+      profiles:
+        required: false
+        type: string
+        default: "[]"
       environment:
         required: false
         type: string
@@ -50,6 +54,32 @@ on:
         required: true
 
 jobs:
+  create-profiles:
+    name: 'Create Profiles'
+    runs-on: arvato
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+
+    strategy:
+      # Define your array of parameters here
+      matrix:
+        profile:  ${{ fromJson(inputs.profiles) }}
+
+    steps:
+    - name: Configure AWS Credentials
+      id: configure-aws-credentials
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ matrix.profile.roleArn }}
+        profile: ${{ matrix.profile.name }}
+
   tofu:
     name: 'Plan Tofu'
     runs-on: arvato
