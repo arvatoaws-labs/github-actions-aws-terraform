@@ -64,7 +64,7 @@ jobs:
         profile:  ${{ fromJson(inputs.profiles) }}
 
     steps:
-    - name: Configure AWS Credentials
+    - name: Configure AWS Credentials via Profile ${{ matrix.profile.name }}
       id: configure-aws-credentials
       uses: aws-actions/configure-aws-credentials@v6
       with:
