@@ -68,7 +68,7 @@ jobs:
       id: configure-aws-credentials
       uses: aws-actions/configure-aws-credentials@v6
       with:
-        aws-region: ${{ inputs.region }}
+        aws-region: ${{ matrix.profile.region }}
         role-to-assume: ${{ matrix.profile.roleArn }}
         aws-profile: ${{ matrix.profile.name }}
 
