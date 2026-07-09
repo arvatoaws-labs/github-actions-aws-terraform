@@ -70,7 +70,7 @@ jobs:
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ matrix.profile.roleArn }}
-        profile: ${{ matrix.profile.name }}
+        aws-profile: ${{ matrix.profile.name }}
 
   tofu:
     name: 'Plan Tofu'
