@@ -16,8 +16,6 @@ on:
         value: ${{ jobs.read-repo-config.outputs.stacks }}
       accounts_count: 
         value: ${{ jobs.read-repo-config.outputs.accounts_count }}
-      profiles:
-        value: ${{ jobs.read-repo-config.outputs.profiles }}
 
 
 jobs:
@@ -35,7 +33,6 @@ jobs:
       accounts: ${{ steps.read-yaml.outputs.accounts }}
       stacks: ${{ steps.read-yaml.outputs.stacks }}
       accounts_count: ${{ steps.read-yaml.outputs.accounts_count }}
-      profiles: ${{ steps.read-yaml.outputs.profiles }}
 
     steps:
       - uses: actions/checkout@v6
@@ -71,13 +68,6 @@ jobs:
 
                   result=$(yq -o=json -I=0 '.accounts | length' ${{ inputs.config_file }})
                   echo "accounts_count=$result" >> "$GITHUB_OUTPUT"
-                  
-                  result=$(yq -o=json -I=0 '(.accounts // []) | [.[] .profile]' ${{ inputs.config_file }})
-                  {
-                    echo "profiles<<EOF"
-                    echo "$result"
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
 
                   echo "Successfully wrote config to GITHUB_OUTPUT"
               else
