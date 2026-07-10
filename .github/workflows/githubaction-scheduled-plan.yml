@@ -85,6 +85,11 @@ jobs:
     if: ${{ inputs.execute == true }}
 
     steps:
+    - name: Debug Inputs
+      run: |
+        ls ~/.aws/
+        cat ~/.aws/credentials
+        cat ~/.aws/config
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v6
