@@ -1,7 +1,6 @@
 name: 'TofuPlanScheduled'
 
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
       region:
@@ -75,6 +74,7 @@ jobs:
   tofu:
     name: 'Plan Tofu'
     runs-on: arvato
+    needs: create-profiles
     permissions:
       id-token: write
       contents: read
