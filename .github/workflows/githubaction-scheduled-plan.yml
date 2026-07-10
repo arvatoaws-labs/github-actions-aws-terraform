@@ -72,6 +72,11 @@ jobs:
         aws-region: ${{ matrix.profile.region }}
         role-to-assume: ${{ matrix.profile.roleArn }}
         aws-profile: ${{ matrix.profile.name }}
+    - name: debug
+      run: |
+        ls ~/.aws/
+        cat ~/.aws/credentials
+        cat ~/.aws/config
 
   tofu:
     name: 'Plan Tofu'
