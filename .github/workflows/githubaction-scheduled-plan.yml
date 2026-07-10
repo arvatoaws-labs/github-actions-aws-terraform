@@ -73,7 +73,7 @@ jobs:
         aws-profile: ${{ matrix.profile.name }}
 
   tofu:
-    name: 'Plan Tofu for ${{ inputs.stack }}'
+    name: 'Plan Tofu'
     runs-on: arvato
     permissions:
       id-token: write
