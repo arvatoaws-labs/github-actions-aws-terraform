@@ -66,6 +66,8 @@ jobs:
     - name: Configure AWS Credentials via Profile ${{ matrix.profile.name }}
       id: configure-aws-credentials
       uses: aws-actions/configure-aws-credentials@v6
+      env:
+        AWS_SKIP_CLEANUP_STEP: "true"
       with:
         aws-region: ${{ matrix.profile.region }}
         role-to-assume: ${{ matrix.profile.roleArn }}
