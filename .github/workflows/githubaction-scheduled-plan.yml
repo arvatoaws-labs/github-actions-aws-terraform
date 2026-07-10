@@ -86,7 +86,7 @@ jobs:
         role-to-assume: ${{ fromJSON(inputs.profiles)[2].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[2].name }}
         
-      - name: Configure AWS Credentials via Profile 3
+    - name: Configure AWS Credentials via Profile 3
       if: ${{ fromJSON(inputs.profiles)[3] != null }}
       id: configure-aws-credentials-3
       uses: aws-actions/configure-aws-credentials@v6
@@ -95,7 +95,7 @@ jobs:
         role-to-assume: ${{ fromJSON(inputs.profiles)[3].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[3].name }}
   
-      - name: Configure AWS Credentials via Profile 4
+    - name: Configure AWS Credentials via Profile 4
       if: ${{ fromJSON(inputs.profiles)[4] != null }}
       id: configure-aws-credentials-4
       uses: aws-actions/configure-aws-credentials@v6
@@ -104,7 +104,7 @@ jobs:
         role-to-assume: ${{ fromJSON(inputs.profiles)[4].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[4].name }}
 
-      - name: Configure AWS Credentials via Profile 5
+    - name: Configure AWS Credentials via Profile 5
       if: ${{ fromJSON(inputs.profiles)[5] != null }}
       id: configure-aws-credentials-5
       uses: aws-actions/configure-aws-credentials@v6
@@ -113,7 +113,7 @@ jobs:
         role-to-assume: ${{ fromJSON(inputs.profiles)[5].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[5].name }}
 
-      - name: Configure AWS Credentials via Profile 6
+    - name: Configure AWS Credentials via Profile 6
       if: ${{ fromJSON(inputs.profiles)[6] != null }}
       id: configure-aws-credentials-6
       uses: aws-actions/configure-aws-credentials@v6
