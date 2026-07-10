@@ -13,6 +13,10 @@ on:
         required: false
         type: string
         default: "."
+      profiles:
+        required: false
+        type: string
+        default: "[]"
       environment:
         required: false
         type: string
@@ -55,6 +59,24 @@ jobs:
     if: ${{ inputs.execute == true }}
 
     steps:
+    - name: Configure AWS Credentials via Profile 0
+      if: ${{ fromJSON(inputs.profiles)[0] != null }}
+      id: configure-aws-credentials-0
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[0].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[0].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[0].name }}
+
+    - name: Configure AWS Credentials via Profile 1
+      if: ${{ fromJSON(inputs.profiles)[1] != null }}
+      id: configure-aws-credentials-1
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[1].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[1].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[1].name }}
+
     - name: Debug Inputs
       run: |
         ls ~/.aws/
