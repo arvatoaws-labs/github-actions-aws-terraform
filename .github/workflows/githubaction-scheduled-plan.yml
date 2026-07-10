@@ -61,7 +61,7 @@ jobs:
       # Define your array of parameters here
       matrix:
         profile:  ${{ fromJson(inputs.profiles) }}
-
+      max-parallel: 1
     steps:
     - name: Configure AWS Credentials via Profile ${{ matrix.profile.name }}
       id: configure-aws-credentials
