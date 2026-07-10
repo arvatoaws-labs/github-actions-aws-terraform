@@ -55,7 +55,7 @@ jobs:
                     echo "EOF"
                   } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '{"include": (.accounts // [])}' ${{ inputs.config_file }})
+                  result=$(yq -o=json -I=0 '(.accounts // [])' ${{ inputs.config_file }})
                   {
                     echo "accounts<<EOF"
                     echo "$result"
