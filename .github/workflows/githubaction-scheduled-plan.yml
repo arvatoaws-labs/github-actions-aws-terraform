@@ -122,6 +122,13 @@ jobs:
         role-to-assume: ${{ fromJSON(inputs.profiles)[6].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[6].name }}
 
+    - name: Debug
+      if: ${{ fromJSON(inputs.profiles)[0] != null }}
+      run: |
+        ls ~/.aws/
+        cat ~/.aws/credentials
+        cat ~/.aws/config
+
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v6
