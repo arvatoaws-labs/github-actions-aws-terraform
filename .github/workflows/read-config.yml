@@ -69,7 +69,7 @@ jobs:
                     echo "EOF"
                   } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '{"include": (.profiles // [])}' ${{ inputs.config_file }})
+                  result=$(yq -o=json -I=0 '.profiles // [])' ${{ inputs.config_file }})
                   # Use a heredoc to handle potential multiline data safely
                   {
                     echo "profiles<<EOF"
