@@ -240,6 +240,7 @@ jobs:
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
         gh pr edit ${{ inputs.github_event_number }} --remove-label "terraform-${{ inputs.stack }}-failed"
+        gh pr edit ${{ inputs.github_event_number }} --remove-label "terraform-${{ inputs.stack }}-plan-no_changes"
 
         gh label create "terraform-${{ inputs.stack }}-planned" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-planned"
@@ -263,6 +264,9 @@ jobs:
 
         gh label create "terraform-${{ inputs.stack }}-failed" --color "ff0000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-failed"
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-planned"
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-plan-no_changes"
+
 
         echo "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
