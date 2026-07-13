@@ -66,6 +66,8 @@ jobs:
       run:
         shell: bash
 
+    if: ${{ inputs.profiles != '[]' && inputs.profiles != '' && inputs.profiles != null }}
+    
     strategy:
       # Define your array of parameters here
       matrix:
