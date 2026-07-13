@@ -29,6 +29,10 @@ on:
         required: false
         type: string
         default: "[]"
+      profiles:
+        required: false
+        type: string
+        default: "[]"
       environment:
         required: false
         type: string
