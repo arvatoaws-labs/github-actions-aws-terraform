@@ -1,0 +1,35 @@
+---
+name: 'tf-scheduled-plan'
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  schedule:
+  - cron: "0 5 * * *"
+
+jobs:
+  init:
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
+
+  tf-plan:
+
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    needs: init
+
+    strategy:
+      matrix: 
+        account: ${{ fromJSON(needs.init.outputs.accounts) }}
+    if: ${{ needs.init.outputs.accounts_count > 0 }}
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-scheduled-plan.yml@v2
+    with:
+      stack: ${{ matrix.account.stack }}
+      region: ${{ matrix.account.region }}
+      roleArn: ${{ matrix.account.roleArn }}
+      profiles: ${{ needs.init.outputs.profiles }}
+      environment: ${{ matrix.account.environment }}
+      execute: true
+    secrets: inherit

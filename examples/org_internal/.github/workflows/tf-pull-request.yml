@@ -1,0 +1,36 @@
+---
+name: 'tf-pull-request'
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  init:
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
+
+  tf-plan:
+    needs: init
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    strategy:
+      matrix: 
+        account: ${{ fromJSON(needs.init.outputs.accounts) }}
+    if: ${{ needs.init.outputs.accounts_count > 0 }}
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
+    with:
+      execute: ${{ contains(github.event.pull_request.labels.*.name, format('terraform-{0}-changed', matrix.account.stack) ) }}
+      stack: ${{ matrix.account.stack }}
+      region: ${{ matrix.account.region }}
+      roleArn: ${{ matrix.account.roleArn }}
+      profiles: ${{ needs.init.outputs.profiles }}
+      environment: ${{ matrix.account.environment }}
+      s3bucketName: ${{ matrix.account.s3bucketName }}
+      github_event_number: ${{ github.event.number }}
+      github_event_issue_comments_url: ${{ github.event.pull_request.comments_url }}
+    secrets: inherit

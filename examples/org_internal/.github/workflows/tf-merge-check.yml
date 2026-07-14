@@ -1,0 +1,10 @@
+---
+name: "tf-merge-check"
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    types: [labeled]
+
+jobs:
+  merge-check:
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-merge-check.yml@v2

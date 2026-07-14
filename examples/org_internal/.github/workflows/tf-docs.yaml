@@ -1,0 +1,47 @@
+---
+name: 'tf-docs'
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  schedule:
+  - cron: "0 5 * * *"
+
+jobs:
+  docs:
+    runs-on: arvato
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Read local repo config
+      id: read-config
+      uses: arvatoaws-labs/github-actions-aws-terraform/actions/github-action-read-config@v2
+
+    - name: Generate .github/atlantis.yml
+      id: generate-tfdocs-config
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        yamlfile: .github/atlantis.yaml
+      run: |
+        touch ${{ env.yamlfile }}
+
+        cat > ${{ env.yamlfile }} << EOF
+        version: 3
+        projects:
+        EOF
+
+        # Use a while loop to be safer with spaces or special characters
+        echo '${{ steps.read-config.outputs.stacks }}' | jq -r '.[]' | while read -r stack; do
+          cat >> ${{ env.yamlfile }} << EOF
+            - name: $stack
+              dir: $stack
+        EOF
+        done
+      shell: bash
+
+    - name: Generate TF docs
+      uses: terraform-docs/gh-actions@v1.4.1
+      with:
+        config-file: .github/.terraform-docs.yml
+        git-push: true
+        atlantis-file: .github/atlantis.yaml

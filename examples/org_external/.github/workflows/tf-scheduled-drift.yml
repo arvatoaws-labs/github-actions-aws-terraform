@@ -1,0 +1,40 @@
+---
+name: 'tf-scheduled-drift'
+
+on:  # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  schedule:
+  - cron: "0 5 * * *"
+
+jobs:
+  init:
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
+
+  tf-check:
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    needs: init
+
+    strategy:
+      matrix: ${{ fromJSON(needs.init.outputs.config_data) }}
+    if: ${{ needs.init.outputs.accounts_count > 0 }}
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-scheduled-plan.yml@v2
+    with:
+      stack: ${{ matrix.stack }}
+      region: ${{ matrix.region }}
+      roleArn: ${{ matrix.roleArn }}
+      environment: ${{ matrix.environment }}
+      execute: true
+    secrets:
+      TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+      TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+      TERRAFORM_GITHUB_ACTION_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+      TF_VAR_SDMSI_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMSI_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_AUTH_RESOURCE: ${{ secrets.TF_VAR_SDMS_AUTH_RESOURCE }}
+      TF_VAR_SDMS_CLIENT_SECRET: ${{ secrets.TF_VAR_SDMS_CLIENT_SECRET }}

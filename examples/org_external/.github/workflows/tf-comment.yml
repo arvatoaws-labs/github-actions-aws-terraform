@@ -1,0 +1,80 @@
+---
+name: 'tf-comment'
+
+on:  # yamllint disable-line rule:truthy
+  issue_comment:
+    types: [created]
+
+jobs:
+  init:
+    if: |
+      github.event.comment.user.login != 'renovate[bot]' &&
+      github.event.comment.user.login != 'terraformautomation[bot]'
+
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
+
+  tf-plan:
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: read
+      pull-requests: write
+
+    needs: init
+
+    strategy:
+      matrix: ${{ fromJSON(needs.init.outputs.config_data) }}
+    if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/plan') }}
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
+    with:
+      stack: ${{ matrix.stack }}
+      region: ${{ matrix.region }}
+      roleArn: ${{ matrix.roleArn }}
+      environment: ${{ matrix.environment }}
+      execute: ${{ contains(github.event.issue.labels.*.name, format('terraform-{0}-changed', matrix.stack) ) }}
+      s3bucketName: ${{ matrix.s3bucketName }}
+      github_event_number: ${{ github.event.issue.number }}
+      github_event_issue_comments_url: ${{ github.event.issue.comments_url }}
+    secrets:
+      TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+      TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+      TERRAFORM_GITHUB_ACTION_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+      TF_VAR_SDMSI_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMSI_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_AUTH_RESOURCE: ${{ secrets.TF_VAR_SDMS_AUTH_RESOURCE }}
+      TF_VAR_SDMS_CLIENT_SECRET: ${{ secrets.TF_VAR_SDMS_CLIENT_SECRET }}
+
+  tf-apply:
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+      pull-requests: write
+
+    needs: init
+
+    strategy:
+      matrix: ${{ fromJSON(needs.init.outputs.config_data) }}
+    if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/apply') }}
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-apply.yml@v2
+    with:
+      stack: ${{ matrix.stack }}
+      region: ${{ matrix.region }}
+      roleArn: ${{ matrix.roleArn }}
+      environment: ${{ matrix.environment }}
+      execute: ${{ contains(github.event.issue.labels.*.name, format('terraform-{0}-changed', matrix.stack) ) && contains(github.event.issue.labels.*.name, format('terraform-{0}-planned', matrix.stack) ) }}
+      s3bucketName: ${{ matrix.s3bucketName }}
+      github_event_number: ${{ github.event.issue.number }}
+      github_event_issue_comments_url: ${{ github.event.issue.comments_url }}
+      github_event_repository_url: ${{ github.event.repository.url }}
+      do_merge_on_success: true
+    secrets:
+      TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+      TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+      TERRAFORM_GITHUB_ACTION_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+      TF_VAR_SDMSI_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMSI_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_AUTH_RESOURCE: ${{ secrets.TF_VAR_SDMS_AUTH_RESOURCE }}
+      TF_VAR_SDMS_CLIENT_SECRET: ${{ secrets.TF_VAR_SDMS_CLIENT_SECRET }}

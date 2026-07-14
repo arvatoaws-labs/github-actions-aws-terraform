@@ -1,0 +1,36 @@
+name: Clear Out of Sync Label
+on:
+  pull_request:
+    types: [synchronize] # Fires whenever a branch is updated/rebased
+
+jobs:
+  clear-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove label if branch is updated
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const targetLabel = 'out-of-sync';
+            
+            // 1. Check if the PR actually has the label right now
+            const hasLabel = pr.labels.some(label => label.name === targetLabel);
+            
+            if (hasLabel) {
+              try {
+                // 2. Remove the label since a push (sync) just happened
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  name: targetLabel
+                });
+                console.log(`Successfully removed '${targetLabel}' from PR #${pr.number}`);
+              } catch (error) {
+                // Handle edge cases (e.g., if the label was manually deleted a second prior)
+                console.log(`Could not remove label: ${error.message}`);
+              }
+            } else {
+              console.log(`PR #${pr.number} does not have the '${targetLabel}' label. Skipping.`);
+            }

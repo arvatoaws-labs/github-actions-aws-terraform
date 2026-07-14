@@ -1,0 +1,37 @@
+name: Label Out of Sync PRs
+on:
+  push:
+    branches: [ main ] # Trigger whenever main is updated
+
+jobs:
+  check-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR sync status
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            
+            for (const pr of prs.data) {
+              // Fetch detailed PR data to check if it's behind
+              const { data: detailedPR } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number
+              });
+              
+              // Check if the branch is behind the base branch
+              if (detailedPR.mergeable_state === 'behind') {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: ['out-of-sync']
+                });
+              }
+            }

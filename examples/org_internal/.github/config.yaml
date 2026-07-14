@@ -1,0 +1,47 @@
+profiles:
+- name: <profileName>
+  roleArn: <roleArn>
+  region: <region>
+- name: <profileName>
+  roleArn: <roleArn>
+  region: <region>
+- name: <profileName>
+  roleArn: <roleArn>
+  region: <region>
+- name: <profileName>
+  roleArn: <roleArn>
+  region: <region>
+- name: <profileName>
+  roleArn: <roleArn>
+  region: <region>
+- name: <profileName>
+  roleArn: <roleArn>
+  region: <region>
+- name: <profileName>
+  roleArn: <roleArn>
+  region: <region>
+  
+accounts:
+  - stack: dev
+    environment: dev
+    roleArn: <roleArn>
+    region: <region>
+    s3bucketName: <s3bucketName>
+  
+  - stack: preprod
+    environment: preprod
+    roleArn: <roleArn>
+    region: <region>
+    s3bucketName: <s3bucketName>
+  
+  - stack: prod
+    environment: prod
+    roleArn: <roleArn>
+    region: <region>
+    s3bucketName: <s3bucketName>
+
+  - stack: tools
+    environment: tools
+    roleArn: <roleArn>
+    region: <region>
+    s3bucketName: <s3bucketName>
