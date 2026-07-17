@@ -38,6 +38,10 @@ Terraform variable secrets are read automatically if prefixed with `TF_VAR_` (fo
 
 ### 2) Create GitHub App
 
+We also need to configure the following GitHub Apps. This has to be done by the Org Administrator.
+
+* TofuAutomation
+
 ### 3) Add `.github/config.yaml`
 
 Create this file in your target repo:
