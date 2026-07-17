@@ -1,11 +1,17 @@
+#######################################################################################################################
+## This file is used to configure the GitHub Actions workflows for Terraform.
+## It defines the profiles and accounts that will be used in the workflows. The profiles section defines the AWS 
+## profiles that will be used to assume roles in different accounts. This section is optional and can be omitted.
+## The accounts section defines the Terraform stacks that will be managed by the workflow.
+#######################################################################################################################
 profiles:
 - name: <profileName>
   roleArn: <roleArn>
   region: <region>
   
 accounts:
-  - stack: dev
-    environment: dev
+  - stack: <folderName>
+    environment: <environmentName>
     roleArn: <roleArn>
     region: <region>
     s3bucketName: <s3bucketName>

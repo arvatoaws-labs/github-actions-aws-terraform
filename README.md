@@ -111,6 +111,8 @@ These file are identical for internal and external.
 - **Same org (recommended):** use `secrets: inherit`
 - **Cross org:** pass secrets explicitly in each caller workflow (`secrets:` block), as shown in `examples/org_external/.github/workflows/`
 
+If you want to be sure it works, just use the external example. This only has to be modified, if the secrets change or additional secrets are needed.
+
 ---
 
 ## Complete examples
