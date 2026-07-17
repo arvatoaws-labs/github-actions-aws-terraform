@@ -1,0 +1,57 @@
+{
+  "extends": [
+    "config:recommended"
+  ],
+  "enabledManagers": ["terraform"],
+  "additionalBranchPrefix": "{{{replace '^([^/]+)/.*$' '$1' packageFile}}}-",
+  "commitMessageSuffix": "({{{replace '^([^/]+)/.*$' '$1' packageFile}}})",
+  "rebaseWhen": "behind-base-branch",
+  "ignorePaths": ["modules/**"],
+  "packageRules": [
+    {
+      "matchManagers": ["terraform"],
+      "matchDepTypes": ["required_version"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["terraform"],
+      "addLabels": ["terraform-{{{replace '^([^/]+)/.*$' '$1' packageFile}}}-changed", "terraform-changed"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "grouped minor/patch updates - arvatoaws",
+      "groupSlug": "arvatoaws",
+      "matchPackageNames": [
+        "arvatoaws/{/,}**"
+      ]
+    },
+    {
+      "matchManagers": ["terraform"],
+      "addLabels": ["terraform-{{{replace '^([^/]+)/.*$' '$1' packageFile}}}-changed", "terraform-changed"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "grouped minor/patch updates - aws-modules",
+      "groupSlug": "aws-modules",
+      "matchPackageNames": [
+        "terraform-aws-modules/{/,}**"
+      ]
+    },
+    {
+      "matchManagers": ["terraform"],
+      "addLabels": ["terraform-{{{replace '^([^/]+)/.*$' '$1' packageFile}}}-changed", "terraform-changed"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "grouped minor/patch updates - other",
+      "groupSlug": "all-other-patches",
+      "matchPackageNames": [
+        "!arvatoaws{/,}**",
+        "!terraform-aws-modules{/,}**"
+      ]
+    },
+    {
+      "matchManagers": ["terraform"],
+      "addLabels": ["terraform-{{{replace '^([^/]+)/.*$' '$1' packageFile}}}-changed", "terraform-changed"],
+      "matchUpdateTypes": ["major"],
+      "matchPackageNames": [
+        "!arvatoaws{/,}**",
+        "!terraform-aws-modules{/,}**"
+      ]
+    }
+  ]
+}
