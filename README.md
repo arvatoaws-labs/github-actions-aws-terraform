@@ -1,6 +1,6 @@
 # github-actions-aws-terraform
 
-Reusable OpenTofu/Terraform GitHub workflows for planning, applying, drift checks, merge gating, docs generation, and config parsing.
+Reusable OpenTofu GitHub workflows for planning, applying, drift checks, merge gating, docs generation, and config parsing.
 
 ## What this repo provides
 
