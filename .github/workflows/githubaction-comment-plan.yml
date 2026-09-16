@@ -133,7 +133,7 @@ jobs:
 
     - name: Check branch status (on pull request)
       env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       if: github.event_name == 'pull_request'
       run: |
         set -x
@@ -230,6 +230,13 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         TERRAFORM_PRE_RUN: |
+          # Hydrate the container's native home directory with the staged profiles
+          if [ -d "/github/workspace/.aws-profiles" ]; then
+            mkdir -p ~/.aws
+            cp -r /github/workspace/.aws-profiles/* ~/.aws/
+            echo "AWS profiles successfully mapped inside the container."
+          fi
+
           # Install AWS CLI
           curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
           unzip -qq awscliv2.zip
