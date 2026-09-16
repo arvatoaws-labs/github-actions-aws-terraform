@@ -45,6 +45,13 @@ on:
         required: false
         type: boolean
         default: true
+      excluded_resources:
+        required: false
+        type: string
+        default: 
+          "
+            module.opswatch_account
+          "
     secrets: # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
@@ -77,14 +84,68 @@ jobs:
     if: ${{ inputs.execute == true }}
 
     steps:
-    # Assume the role in AWS to roll out the changes
-    - name: Configure AWS Credentials
-      id: configure-aws-credentials
+    - name: Configure AWS Credentials via Profile 0
+      if: ${{ fromJSON(inputs.profiles)[0] != null }}
+      id: configure-aws-credentials-0
       uses: aws-actions/configure-aws-credentials@v6
       with:
-        aws-region: ${{ inputs.region }}
-        role-to-assume: ${{ inputs.roleArn }}
-        role-session-name: GitHubTerraformDeployment
+        aws-region: ${{ fromJSON(inputs.profiles)[0].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[0].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[0].name }}
+
+    - name: Configure AWS Credentials via Profile 1
+      if: ${{ fromJSON(inputs.profiles)[1] != null }}
+      id: configure-aws-credentials-1
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[1].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[1].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[1].name }}
+
+    - name: Configure AWS Credentials via Profile 2
+      if: ${{ fromJSON(inputs.profiles)[2] != null }}
+      id: configure-aws-credentials-2
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[2].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[2].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[2].name }}
+        
+    - name: Configure AWS Credentials via Profile 3
+      if: ${{ fromJSON(inputs.profiles)[3] != null }}
+      id: configure-aws-credentials-3
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[3].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[3].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[3].name }}
+  
+    - name: Configure AWS Credentials via Profile 4
+      if: ${{ fromJSON(inputs.profiles)[4] != null }}
+      id: configure-aws-credentials-4
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[4].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[4].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[4].name }}
+
+    - name: Configure AWS Credentials via Profile 5
+      if: ${{ fromJSON(inputs.profiles)[5] != null }}
+      id: configure-aws-credentials-5
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[5].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[5].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[5].name }}
+
+    - name: Configure AWS Credentials via Profile 6
+      if: ${{ fromJSON(inputs.profiles)[6] != null }}
+      id: configure-aws-credentials-6
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[6].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[6].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[6].name }}
 
     # Get the github token with access to the relevant repositories from the app
     - name: Generate token
@@ -180,6 +241,18 @@ jobs:
         done
       shell: bash
 
+      # 1. Stash the host-generated profiles safely inside the workspace
+    - name: Stage AWS Config for Container Access
+      run: |
+        if [ -d "$HOME/.aws" ]; then
+          mkdir -p ${{ github.workspace }}/.aws-profiles
+          cp -r $HOME/.aws/* ${{ github.workspace }}/.aws-profiles/
+          echo "AWS profiles successfully staged for container access."
+        else
+          echo "No AWS profiles found to stage."
+        fi
+      shell: bash
+
     - name: terraform apply ${{ inputs.stack }}
       id: tfapply
       uses: dflook/tofu-apply@v2
@@ -188,15 +261,24 @@ jobs:
         label: ${{ inputs.stack }} (${{ inputs.environment }})
         var_file: |
           secret_variables.tfvars
+        exclude: |
+          ${{ inputs.excluded_resources }}
       env:
         OPENTOFU_VERSION: "~> 1.12.4"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         TERRAFORM_PRE_RUN: |
+          # 2. Hydrate the container's native home directory with the staged profiles
+          if [ -d "/github/workspace/.aws-profiles" ]; then
+            mkdir -p ~/.aws
+            cp -r /github/workspace/.aws-profiles/* ~/.aws/
+            echo "AWS profiles successfully mapped inside the container."
+          fi
+
           # Install AWS CLI
           curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
           unzip -qq awscliv2.zip
@@ -206,7 +288,7 @@ jobs:
     - name: Add labels to GitHub PR
       id: add-labels-to-pull-request
       env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
@@ -223,14 +305,14 @@ jobs:
       id: merge-pull-request
       if: ${{ inputs.do_merge_on_success && success() }}
       env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
 
     - name: Report Results
       if: always()
       env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         if [ -s error_log.txt ]; then
           gh pr comment ${{ inputs.github_event_number }} --body-file error_log.txt --repo ${{ github.repository }}
