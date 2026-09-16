@@ -40,10 +40,7 @@ on:
       excluded_resources:
         required: false
         type: string
-        default: 
-          "
-            module.opswatch_account
-          "
+        default: "module.opswatch_account"
     secrets: # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
