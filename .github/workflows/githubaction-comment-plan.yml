@@ -164,7 +164,7 @@ jobs:
     - name: Check branch status (on issue comment)
       if: github.event.issue.pull_request
       env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
