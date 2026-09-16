@@ -212,6 +212,15 @@ jobs:
         done
       shell: bash
 
+    # Stash the host-generated profiles safely inside the workspace
+    - name: Stage AWS Config for Container Access
+      run: |
+        if [ -d "$HOME/.aws" ]; then
+          mkdir -p ${{ github.workspace }}/.aws-profiles
+          cp -r $HOME/.aws/* ${{ github.workspace }}/.aws-profiles/
+        fi
+      shell: bash
+
     - name: terraform plan ${{ inputs.stack }}
       id: tfplan
       uses: dflook/tofu-plan@v2
