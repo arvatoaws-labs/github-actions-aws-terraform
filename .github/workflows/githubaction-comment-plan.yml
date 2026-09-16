@@ -54,34 +54,6 @@ on:
         required: true
 
 jobs:
-  create-profiles:
-    name: 'Create Profiles'
-    runs-on: arvato
-    permissions:
-      actions: read
-      id-token: write
-      contents: read
-      pull-requests: write
-    defaults:
-      run:
-        shell: bash
-
-    if: ${{ inputs.profiles != '[]' && inputs.profiles != '' && inputs.profiles != null }}
-    
-    strategy:
-      # Define your array of parameters here
-      matrix:
-        profile:  ${{ fromJson(inputs.profiles) }}
-
-    steps:
-    - name: Configure AWS Credentials
-      id: configure-aws-credentials
-      uses: aws-actions/configure-aws-credentials@v6
-      with:
-        aws-region: ${{ inputs.region }}
-        role-to-assume: ${{ matrix.profile.roleArn }}
-        profile: ${{ matrix.profile.name }}
-
   tofu:
     name: 'Plan Tofu'
     runs-on: arvato
@@ -96,6 +68,69 @@ jobs:
     if: ${{ inputs.execute == true }}
 
     steps:
+    - name: Configure AWS Credentials via Profile 0
+      if: ${{ fromJSON(inputs.profiles)[0] != null }}
+      id: configure-aws-credentials-0
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[0].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[0].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[0].name }}
+
+    - name: Configure AWS Credentials via Profile 1
+      if: ${{ fromJSON(inputs.profiles)[1] != null }}
+      id: configure-aws-credentials-1
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[1].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[1].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[1].name }}
+
+    - name: Configure AWS Credentials via Profile 2
+      if: ${{ fromJSON(inputs.profiles)[2] != null }}
+      id: configure-aws-credentials-2
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[2].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[2].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[2].name }}
+        
+    - name: Configure AWS Credentials via Profile 3
+      if: ${{ fromJSON(inputs.profiles)[3] != null }}
+      id: configure-aws-credentials-3
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[3].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[3].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[3].name }}
+  
+    - name: Configure AWS Credentials via Profile 4
+      if: ${{ fromJSON(inputs.profiles)[4] != null }}
+      id: configure-aws-credentials-4
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[4].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[4].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[4].name }}
+
+    - name: Configure AWS Credentials via Profile 5
+      if: ${{ fromJSON(inputs.profiles)[5] != null }}
+      id: configure-aws-credentials-5
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[5].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[5].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[5].name }}
+
+    - name: Configure AWS Credentials via Profile 6
+      if: ${{ fromJSON(inputs.profiles)[6] != null }}
+      id: configure-aws-credentials-6
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ fromJSON(inputs.profiles)[6].region }}
+        role-to-assume: ${{ fromJSON(inputs.profiles)[6].roleArn }}
+        aws-profile: ${{ fromJSON(inputs.profiles)[6].name }}
+        
     - name: Initialize Error Log
       run: touch error_log.txt
 
