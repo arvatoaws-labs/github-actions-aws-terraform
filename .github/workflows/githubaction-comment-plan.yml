@@ -130,7 +130,7 @@ jobs:
         aws-region: ${{ fromJSON(inputs.profiles)[6].region }}
         role-to-assume: ${{ fromJSON(inputs.profiles)[6].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[6].name }}
-        
+
     - name: Initialize Error Log
       run: touch error_log.txt
 
@@ -277,7 +277,7 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         TERRAFORM_PRE_RUN: |
-          # Hydrate the container's native home directory with the staged profiles
+          # 2. Hydrate the container's native home directory with the staged profiles
           if [ -d "/github/workspace/.aws-profiles" ]; then
             mkdir -p ~/.aws
             cp -r /github/workspace/.aws-profiles/* ~/.aws/
@@ -295,7 +295,7 @@ jobs:
 
       if: success()
       env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
@@ -319,7 +319,7 @@ jobs:
       id: add-failed-labels-to-pull-request
       if: failure()
       env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         set -x
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
