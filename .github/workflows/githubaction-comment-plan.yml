@@ -212,12 +212,15 @@ jobs:
         done
       shell: bash
 
-    # Stash the host-generated profiles safely inside the workspace
+    # 1. Stash the host-generated profiles safely inside the workspace
     - name: Stage AWS Config for Container Access
       run: |
         if [ -d "$HOME/.aws" ]; then
           mkdir -p ${{ github.workspace }}/.aws-profiles
           cp -r $HOME/.aws/* ${{ github.workspace }}/.aws-profiles/
+          echo "AWS profiles successfully staged for container access."
+        else
+          echo "No AWS profiles found to stage."
         fi
       shell: bash
 
