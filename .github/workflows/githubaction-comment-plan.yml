@@ -170,7 +170,7 @@ jobs:
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
         # 1. Get branch info via GitHub CLI
-        PR_DATA=$(gh pr view ${{ github.event.issue.number }} --json baseRefName,headRefName)
+        PR_DATA=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json baseRefName,headRefName)
         BASE_BRANCH=$(echo $PR_DATA | jq -r '.baseRefName')
         HEAD_BRANCH=$(echo $PR_DATA | jq -r '.headRefName')
 
@@ -189,7 +189,7 @@ jobs:
 
           echo "::error::PR branch is out of date with $BASE_BRANCH"
           gh label create "outdated" --color "ff0000" --force
-          gh pr edit ${{ inputs.github_event_number }} --add-label "outdated" || true
+          gh pr edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label "outdated" || true
           exit 1
         else
           echo "PR is up to date!"
