@@ -132,6 +132,8 @@ jobs:
         fetch-depth: 0
 
     - name: Check branch status (on pull request)
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       if: github.event_name == 'pull_request'
       run: |
         set -x
