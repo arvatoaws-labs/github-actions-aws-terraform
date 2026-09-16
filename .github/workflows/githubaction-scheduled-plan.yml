@@ -29,6 +29,10 @@ on:
         required: false
         type: string
         default: "arvatoaws"
+      excluded_resources:
+        required: false
+        type: string
+        default: ""
     secrets: # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
@@ -181,12 +185,14 @@ jobs:
         path: ${{ inputs.stack }}
         var_file: |
           secret_variables.tfvars
+        exclude: |
+          ${{ inputs.excluded_resources }}
       env:
         OPENTOFU_VERSION: 1.12.4
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         TERRAFORM_PRE_RUN: |

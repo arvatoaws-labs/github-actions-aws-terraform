@@ -26,6 +26,10 @@ on:
         required: true
         type: boolean
         default: false
+      excluded_resources:
+        required: false
+        type: string
+        default: ""
     secrets: # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
@@ -97,6 +101,18 @@ jobs:
         done
       shell: bash
 
+      # 1. Stash the host-generated profiles safely inside the workspace
+    - name: Stage AWS Config for Container Access
+      run: |
+        if [ -d "$HOME/.aws" ]; then
+          mkdir -p ${{ github.workspace }}/.aws-profiles
+          cp -r $HOME/.aws/* ${{ github.workspace }}/.aws-profiles/
+          echo "AWS profiles successfully staged for container access."
+        else
+          echo "No AWS profiles found to stage."
+        fi
+      shell: bash
+
     - name: terraform check ${{ inputs.stack }}
       id: check
       uses: dflook/tofu-check@v2
@@ -104,15 +120,23 @@ jobs:
         path: ${{ inputs.stack }}
         var_file: |
           secret_variables.tfvars
+
       env:
         OPENTOFU_VERSION: 1.12.4
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
-        GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
-        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         TERRAFORM_PRE_RUN: |
+          # 2. Hydrate the container's native home directory with the staged profiles
+          if [ -d "/github/workspace/.aws-profiles" ]; then
+            mkdir -p ~/.aws
+            cp -r /github/workspace/.aws-profiles/* ~/.aws/
+            echo "AWS profiles successfully mapped inside the container."
+          fi
+
           # Install AWS CLI for X86
           curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
           unzip -q awscliv2.zip
