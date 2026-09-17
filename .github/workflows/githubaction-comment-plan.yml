@@ -159,6 +159,7 @@ jobs:
         client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         owner: ${{ inputs.owner }}
+        
     # Get the github token with access to the relevant repositories from the app
     - name: Generate modules token
       id: generate-modules-token

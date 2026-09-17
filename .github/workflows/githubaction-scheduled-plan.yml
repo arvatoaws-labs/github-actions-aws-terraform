@@ -132,6 +132,7 @@ jobs:
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
+
     # Get the github token with access to the relevant repositories from the app
     - name: Generate token
       id: generate-token
@@ -140,6 +141,16 @@ jobs:
         client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         owner: ${{ inputs.owner }}
+
+    # Get the github token with access to the relevant repositories from the app
+    - name: Generate modules token
+      id: generate-modules-token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+        private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        owner: arvatoaws
+
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
       with:
@@ -190,7 +201,7 @@ jobs:
       env:
         OPENTOFU_VERSION: 1.12.4
         TERRAFORM_HTTP_CREDENTIALS: |
-          github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
+          github.com/arvatoaws=oauth:${{ steps.generate-modules-token.outputs.token }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
