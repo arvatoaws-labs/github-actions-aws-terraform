@@ -288,7 +288,6 @@ jobs:
         exclude: |
           ${{ inputs.excluded_resources }}
       env:
-        TF_DATA_DIR: ".terraform"
         TF_PLAN_COLLAPSE_LENGTH: 1000  # Set this high to keep it expanded
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-modules-token.outputs.token }}
