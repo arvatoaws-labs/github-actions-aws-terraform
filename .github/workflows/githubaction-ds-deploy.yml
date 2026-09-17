@@ -22,9 +22,10 @@ on:
       project:
         type: string
         default: 'unknown'
-      github_org:
+      owner:
+        required: false
         type: string
-        default: arvatoaws
+        default: "arvatoaws"
 
 jobs:
   build:
@@ -45,7 +46,7 @@ jobs:
         with:
           client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
           private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-          owner: ${{ inputs.github_org }}
+          owner: ${{ inputs.owner }}
 
       - uses: actions/checkout@v6
         with:

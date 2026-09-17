@@ -30,6 +30,10 @@ on:
         required: false
         type: string
         default: ""
+      owner:
+        required: false
+        type: string
+        default: "arvatoaws"
     secrets: # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
@@ -74,7 +78,7 @@ jobs:
       with:
         client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        owner: arvatoaws
+        owner: ${{ inputs.owner }}
 
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
