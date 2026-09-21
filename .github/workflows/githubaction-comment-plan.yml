@@ -48,7 +48,7 @@ on:
       autoapply:
         required: false
         type: boolean
-        default: true
+        default: false
     secrets: # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
@@ -313,21 +313,6 @@ jobs:
           ./aws/install
           /usr/local/bin/aws --version
 
-    - name: Automatically apply plan if no changes
-      id: autoapply-plan
-
-      if: ${{ inputs.autoapply && steps.tfplan.outputs.changes && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "do autoapply: ${{ inputs.autoapply }}"
-        echo "Autoapply allowed: ${{ contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
-        echo "Autoapply allowed."
-        echo "changes: ${{ steps.tfplan.outputs.changes }}"
-        echo "adding: ${{ steps.tfplan.outputs.to_add }}"
-        echo "changing: ${{ steps.tfplan.outputs.to_change }}"
-        echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
-
     - name: Add Successful labels to GitHub PR
       id: add-success-labels-to-pull-request
 
@@ -369,6 +354,49 @@ jobs:
 
 
         echo "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
+
+    - name: Automatically apply plan if no changes
+      id: autoapply-plan
+
+      if: ${{ inputs.autoapply && !steps.tfplan.outputs.changes && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "do autoapply: ${{ inputs.autoapply }}"
+        echo "Autoapply allowed: ${{ contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
+        echo "Autoapply allowed."
+        echo "changes: ${{ steps.tfplan.outputs.changes }}"
+        echo "adding: ${{ steps.tfplan.outputs.to_add }}"
+        echo "changing: ${{ steps.tfplan.outputs.to_change }}"
+        echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
+  
+    - name: Add labels to GitHub PR
+      id: add-labels-to-pull-request
+
+      if: ${{ inputs.autoapply && !steps.tfplan.outputs.changes && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        set -x
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
+
+        gh label create "terraform-${{ inputs.stack }}-applied" --color "008000" --force
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
+
+        gh label create "terraform-applied" --color "008000" --force
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied" 
+
+        echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
+
+    - name: Merging Pull request
+      id: merge-pull-request
+      if: ${{ inputs.autoapply && !steps.tfplan.outputs.changes && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') && success() }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
 
     - name: Report Results
       if: always()
