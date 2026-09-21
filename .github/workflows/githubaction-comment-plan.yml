@@ -309,6 +309,17 @@ jobs:
           ./aws/install
           /usr/local/bin/aws --version
 
+    - name: Automatically apply plan if no changes
+      id: autoapply-plan
+
+      if: ${{ !tfplan.outputs.changes && contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') }}
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "Autoapply allowed."
+        echo "${{ tfplan.outputs.changes }}"
+        echo "adding: ${{ tfplan.outputs.to_add }}"
+
     - name: Add Successful labels to GitHub PR
       id: add-success-labels-to-pull-request
 
