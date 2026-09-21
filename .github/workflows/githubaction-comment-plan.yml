@@ -312,7 +312,7 @@ jobs:
     - name: Automatically apply plan if no changes
       id: autoapply-plan
 
-      if: ${{ !steps.tfplan.outputs.changes && contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') }}
+      if: ${{ steps.tfplan.outputs.changes && contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') }}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
