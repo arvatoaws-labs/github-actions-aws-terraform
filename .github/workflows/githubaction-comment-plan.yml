@@ -316,13 +316,15 @@ jobs:
     - name: Automatically apply plan if no changes
       id: autoapply-plan
 
-      if: ${{ inputs.autoapply && !steps.tfplan.outputs.changes && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+      # if: ${{ inputs.autoapply && !steps.tfplan.outputs.changes && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         echo "Autoapply allowed."
         echo "${{ steps.tfplan.outputs.changes }}"
         echo "adding: ${{ steps.tfplan.outputs.to_add }}"
+        echo "changing: ${{ steps.tfplan.outputs.to_change }}"
+        echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
 
     - name: Add Successful labels to GitHub PR
       id: add-success-labels-to-pull-request
