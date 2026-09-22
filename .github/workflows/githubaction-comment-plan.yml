@@ -396,7 +396,7 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
+        # gh pr merge --merge --auto --subject "chore (automation): Tofu plans applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
 
     - name: Report Results
       if: always()
