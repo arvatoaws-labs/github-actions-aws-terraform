@@ -366,7 +366,7 @@ jobs:
         echo "do autoapply: ${{ inputs.autoapply == true}}"
         echo "Autoapply allowed: ${{ contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
         echo "Autoapply allowed."
-        echo "changes: ${{ steps.tfplan.outputs.changes == false}}"
+        echo "changes: ${{ steps.tfplan.outputs.changes == 'false'}}"
         echo "adding: ${{ steps.tfplan.outputs.to_add }}"
         echo "changing: ${{ steps.tfplan.outputs.to_change }}"
         echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
