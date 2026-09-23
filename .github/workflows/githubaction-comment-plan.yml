@@ -372,7 +372,7 @@ jobs:
         echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
   
     - name: Add labels to GitHub PR
-      id: add-labels-and merge
+      id: add-labels-and-merge
 
       if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == false && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
 
