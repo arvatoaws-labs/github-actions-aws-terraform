@@ -406,7 +406,7 @@ jobs:
         echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
   
     - name: Add labels to GitHub PR
-      id: add-labels-and-merge
+      id: add-autoapply-labels
 
       if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
 
@@ -425,9 +425,15 @@ jobs:
 
         echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
+    - name: Merging Pull request (autoapply)
+      id: merge-autoapply
+      
+      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
         gh pr merge --merge --auto --subject "chore (automation): Tofu plans automatically applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
         echo "$TIMESTAMP: Successfully meerged pull request." >> error_log.txt
-
 
     - name: Report Results
       if: always()
