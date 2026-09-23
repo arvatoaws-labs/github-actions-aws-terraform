@@ -342,8 +342,7 @@ jobs:
         echo "${{ steps.tfplan.outputs.changes }}"
         echo "labels pr: ${{ contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') }}"
         echo "labels issue: ${{ contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
-        echo "labels combined: ${{ contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') || contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
-        echo "labels combined: ${{ contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') | contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
+        echo "labels combined: ${{ contains(join(github.event.pull_request.labels.*.name, ','), 'terraform-autoapply-allowed') || contains(join(github.event.issue.labels.*.name, ','), 'terraform-autoapply-allowed') }}"
 
     - name: Add Failed labels to GitHub PR
       id: add-failed-labels-to-pull-request
