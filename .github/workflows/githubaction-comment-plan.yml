@@ -357,7 +357,13 @@ jobs:
 
     - name: terraform apply ${{ inputs.stack }}
 
-      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+      if: |
+        inputs.autoapply == true && 
+        steps.tfplan.outputs.changes == 'true' && 
+        (
+          contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') ||
+          contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed')
+        )
 
       id: tfapply
       uses: dflook/tofu-apply@v2
@@ -389,26 +395,17 @@ jobs:
           unzip -qq -o awscliv2.zip
           ./aws/install
           /usr/local/bin/aws --version      
-    - name: Automatically apply plan if no changes
-      id: autoapply-plan
-
-      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
-
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        echo "do autoapply: ${{ inputs.autoapply }}"
-        echo "Autoapply allowed: ${{ contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
-        echo "Autoapply allowed."
-        echo "changes: ${{ steps.tfplan.outputs.changes }}"
-        echo "adding: ${{ steps.tfplan.outputs.to_add }}"
-        echo "changing: ${{ steps.tfplan.outputs.to_change }}"
-        echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
   
     - name: Add labels to GitHub PR
       id: add-autoapply-labels
 
-      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+      if: |
+        inputs.autoapply == true && 
+        steps.tfplan.outputs.changes == 'true' && 
+        (
+          contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') ||
+          contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed')
+        )
 
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -428,7 +425,14 @@ jobs:
     - name: Merging Pull request (autoapply)
       id: merge-autoapply
       
-      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+      if: |
+        inputs.autoapply == true && 
+        steps.tfplan.outputs.changes == 'true' && 
+        (
+          contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') ||
+          contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed')
+        )
+          
       env:
         GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
