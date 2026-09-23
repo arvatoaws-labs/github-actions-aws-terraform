@@ -415,8 +415,14 @@ jobs:
         gh label create "terraform-${{ inputs.stack }}-applied" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
 
+        gh label create "terraform-${{ inputs.stack }}-autoapplied" --color "008000" --force
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-autoapplied"  
+
         gh label create "terraform-applied" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied" 
+
+        gh label create "terraform-autoapplied" --color "008000" --force
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-autoapplied" 
 
         echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
