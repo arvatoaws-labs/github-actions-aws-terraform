@@ -433,7 +433,7 @@ jobs:
         GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         gh pr merge --merge --auto --subject "chore (automation): Tofu plans automatically applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
-        echo "$TIMESTAMP: Successfully meerged pull request." >> error_log.txt
+        echo "$TIMESTAMP: Successfully merged autoapplied pull request." >> error_log.txt
 
     - name: Report Results
       if: always()
