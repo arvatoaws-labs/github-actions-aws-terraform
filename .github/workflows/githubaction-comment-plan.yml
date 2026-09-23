@@ -355,6 +355,40 @@ jobs:
 
         echo "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
+    - name: terraform apply ${{ inputs.stack }}
+
+      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+
+      id: tfapply
+      uses: dflook/tofu-apply@v2
+      with:
+        path: ${{ inputs.stack }}
+        label: ${{ inputs.stack }} (${{ inputs.environment }})
+        var_file: |
+          secret_variables.tfvars
+        exclude: |
+          ${{ inputs.excluded_resources }}
+      env:
+        OPENTOFU_VERSION: "~> 1.12.4"
+        TERRAFORM_HTTP_CREDENTIALS: |
+          github.com/arvatoaws=oauth:${{ steps.generate-modules-token.outputs.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TERRAFORM_ACTIONS_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        TERRAFORM_PRE_RUN: |
+          # 2. Hydrate the container's native home directory with the staged profiles
+          if [ -d "/github/workspace/.aws-profiles" ]; then
+            mkdir -p ~/.aws
+            cp -r /github/workspace/.aws-profiles/* ~/.aws/
+            echo "AWS profiles successfully mapped inside the container."
+          fi
+
+          # Install AWS CLI
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+          unzip -qq awscliv2.zip
+          ./aws/install
+          /usr/local/bin/aws --version      
     - name: Automatically apply plan if no changes
       id: autoapply-plan
 
