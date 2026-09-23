@@ -338,6 +338,11 @@ jobs:
         
         echo "$TIMESTAMP: Tofu plan successful on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
+        echo "${{ inputs.autoapply }}"
+        echo "${{ steps.tfplan.outputs.changes }}"
+        echo "labels pr: ${{ github.event.pull_request.labels.*.name }}"
+        echo "labels issue: ${{ github.event.issue.labels.*.name }}"
+
     - name: Add Failed labels to GitHub PR
       id: add-failed-labels-to-pull-request
       if: failure()
@@ -432,7 +437,7 @@ jobs:
           contains(github.event.pull_request.labels.*.name, 'terraform-autoapply-allowed') ||
           contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed')
         )
-          
+
       env:
         GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
