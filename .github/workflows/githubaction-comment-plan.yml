@@ -358,15 +358,15 @@ jobs:
     - name: Automatically apply plan if no changes
       id: autoapply-plan
 
-      # if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == false && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
 
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        echo "do autoapply: ${{ inputs.autoapply == true}}"
+        echo "do autoapply: ${{ inputs.autoapply }}"
         echo "Autoapply allowed: ${{ contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}"
         echo "Autoapply allowed."
-        echo "changes: ${{ steps.tfplan.outputs.changes == 'false'}}"
+        echo "changes: ${{ steps.tfplan.outputs.changes }}"
         echo "adding: ${{ steps.tfplan.outputs.to_add }}"
         echo "changing: ${{ steps.tfplan.outputs.to_change }}"
         echo "destroying: ${{ steps.tfplan.outputs.to_destroy }}"
@@ -374,7 +374,7 @@ jobs:
     - name: Add labels to GitHub PR
       id: add-labels-and-merge
 
-      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == false && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
+      if: ${{ inputs.autoapply == true && steps.tfplan.outputs.changes == 'false' && contains(github.event.issue.labels.*.name, 'terraform-autoapply-allowed') }}
 
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
