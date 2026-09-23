@@ -110,7 +110,7 @@ jobs:
 
     # Install the latest version of Tofu CLI
     - name: Setup Tofu
-      uses: opentofu/setup-opentofu@v1
+      uses: opentofu/setup-opentofu@v2
     # Initialize Terraform
     - name: Tofu Init
       run: |
