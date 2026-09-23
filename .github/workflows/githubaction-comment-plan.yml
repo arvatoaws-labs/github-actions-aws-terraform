@@ -54,7 +54,7 @@ jobs:
 
     # Assume the role in AWS to roll out the changes
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
@@ -63,7 +63,7 @@ jobs:
     # Get the github token with access to the relevant repositories from the app
     - name: Generate token
       id: generate-token
-      uses: actions/create-github-app-token@v2
+      uses: actions/create-github-app-token@v3
       with:
         app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
@@ -76,7 +76,7 @@ jobs:
 
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         ref: refs/pull/${{ inputs.github_event_number }}/merge
     - run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
@@ -84,7 +84,7 @@ jobs:
 
     # Terraform Validation Steps
     - name: terraform validate ${{ inputs.stack }}
-      uses: dflook/tofu-validate@v2
+      uses: dflook/tofu-validate@v3
       with:
         path: ${{ inputs.stack }}
       env:
@@ -96,7 +96,7 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
     - name: terraform fmt ${{ inputs.stack }}
-      uses: dflook/tofu-fmt-check@v2
+      uses: dflook/tofu-fmt-check@v3
       with:
         path: ${{ inputs.stack }}
       env:
@@ -198,11 +198,11 @@ jobs:
       contents: read
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     # Assume the role in AWS to upload the logs
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         aws-region: ${{ inputs.region }}
         role-to-assume: ${{ inputs.roleArn }}
