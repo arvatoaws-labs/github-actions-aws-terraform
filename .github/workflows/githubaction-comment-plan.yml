@@ -65,7 +65,7 @@ jobs:
       id: generate-token
       uses: actions/create-github-app-token@v3
       with:
-        app-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+        client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         owner: arvatoaws
 
@@ -110,7 +110,7 @@ jobs:
 
     # Install the latest version of Tofu CLI
     - name: Setup Tofu
-      uses: opentofu/setup-opentofu@v1
+      uses: opentofu/setup-opentofu@v2
     # Initialize Terraform
     - name: Tofu Init
       run: |
