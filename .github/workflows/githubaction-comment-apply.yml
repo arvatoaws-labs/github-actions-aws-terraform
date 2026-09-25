@@ -148,6 +148,18 @@ jobs:
         role-to-assume: ${{ fromJSON(inputs.profiles)[6].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[6].name }}
 
+    - name: Initialize Error Log
+      run: touch error_log.txt
+
+    # Assume the role in AWS to roll out the changes
+    - name: Configure AWS Credentials
+      id: configure-aws-credentials
+      uses: aws-actions/configure-aws-credentials@v6
+      with:
+        aws-region: ${{ inputs.region }}
+        role-to-assume: ${{ inputs.roleArn }}
+        role-session-name: GitHubTerraformDeployment
+
     # Get the github token with access to the relevant repositories from the app
     - name: Generate token
       id: generate-token
