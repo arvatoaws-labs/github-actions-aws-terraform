@@ -325,6 +325,13 @@ jobs:
 
         echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
+    - name: Generate TF docs
+      uses: terraform-docs/gh-actions@v1.4.1
+      with:
+        config-file: .github/.terraform-docs.yml
+        git-push: true
+        working-dir: ${{ inputs.stack }}
+
     - name: Merging Pull request
       id: merge-pull-request
       if: ${{ inputs.do_merge_on_success && success() }}
