@@ -1,5 +1,8 @@
 name: 'TofuApply'
 
+env:
+  OPENTOFU_VERSION: "1.13.1"
+  
 concurrency:
   group: ${{ inputs.stack }}
   cancel-in-progress: false
