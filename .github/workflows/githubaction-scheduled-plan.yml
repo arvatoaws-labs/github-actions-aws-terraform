@@ -1,8 +1,5 @@
 name: 'TofuPlanScheduled'
 
-env:
-  OPENTOFU_VERSION: "1.13.1"
-  
 on:
   workflow_call:
     inputs:
@@ -202,7 +199,7 @@ jobs:
         exclude: |
           ${{ inputs.excluded_resources }}
       env:
-        OPENTOFU_VERSION: 1.12.4
+        OPENTOFU_VERSION: "~> 1.13"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-modules-token.outputs.token }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
