@@ -1,5 +1,8 @@
 name: 'TofuPlanScheduled'
 
+env:
+  OPENTOFU_VERSION: "~> 1.13"
+
 on:
   workflow_call:
     inputs:

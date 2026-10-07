@@ -1,5 +1,8 @@
 name: 'TofuScheduledDrift'
 
+env:
+  OPENTOFU_VERSION: "~> 1.13"
+
 on:
   workflow_dispatch:
   workflow_call:
@@ -135,7 +138,6 @@ jobs:
           secret_variables.tfvars
 
       env:
-        OPENTOFU_VERSION: "1.13.1"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-modules-token.outputs.token }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
