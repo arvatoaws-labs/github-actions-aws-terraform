@@ -409,7 +409,7 @@ jobs:
 
       run: |
         set -x
-        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
         gh label create "terraform-${{ inputs.stack }}-applied" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
