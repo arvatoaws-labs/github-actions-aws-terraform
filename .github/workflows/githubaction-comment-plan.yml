@@ -108,11 +108,9 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-    # Install Tofu CLI
+    # Install the latest version of Tofu CLI
     - name: Setup Tofu
       uses: opentofu/setup-opentofu@v2
-      with:
-        tofu_version: "1.13.1"
     # Initialize Terraform
     - name: Tofu Init
       run: |

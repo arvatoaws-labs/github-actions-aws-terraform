@@ -162,11 +162,9 @@ jobs:
         cd ${{ inputs.stack }}
         aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/tfplan ./tfplan
 
-    # Install Tofu CLI
+    # Install the latest version of Tofu CLI
     - name: Setup Tofu
       uses: opentofu/setup-opentofu@v2
-      with:
-        tofu_version: "1.13.1"
     # Initialize Terraform
     - name: Tofu Init
       run: |
