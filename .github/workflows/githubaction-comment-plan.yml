@@ -5,11 +5,6 @@ on:
     types: [created]
   workflow_call:
     inputs:
-      opentofu_version:
-        description: "OpenTofu version for validation, formatting and CLI operations; empty preserves existing defaults."
-        required: false
-        type: string
-        default: ""
       region:
         required: true
         type: string
@@ -93,7 +88,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
-        OPENTOFU_VERSION: ${{ inputs.opentofu_version || '1.12.3' }}
+        OPENTOFU_VERSION: "1.13.1"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -105,7 +100,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
-        OPENTOFU_VERSION: ${{ inputs.opentofu_version || '1.12.3' }}
+        OPENTOFU_VERSION: "1.13.1"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -113,11 +108,11 @@ jobs:
         GITHUB_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
         GITHUB_APP_PEM_FILE: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
 
-    # Install the latest version of Tofu CLI
+    # Install Tofu CLI
     - name: Setup Tofu
       uses: opentofu/setup-opentofu@v2
       with:
-        tofu_version: ${{ inputs.opentofu_version || 'latest' }}
+        tofu_version: "1.13.1"
     # Initialize Terraform
     - name: Tofu Init
       run: |
