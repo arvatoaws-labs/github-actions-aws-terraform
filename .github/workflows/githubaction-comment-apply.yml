@@ -187,20 +187,12 @@ jobs:
       with:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
-    - name: Get PR Head Branch
-      id: pr-branch
-      env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-      run: |
-        HEAD_REF=$(gh pr view ${{ inputs.github_event_number }} --repo ${{ github.repository }} --json headRefName -q '.headRefName')
-        echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
-
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       id: checkout-pull-request
       uses: actions/checkout@v6
       with:
-        ref: ${{ steps.pr-branch.outputs.head_ref }}
+        ref: refs/pull/${{ inputs.github_event_number }}/merge
 
     - name: Check branch status (on pull request)
       if: github.event_name == 'pull_request'
@@ -334,13 +326,6 @@ jobs:
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied" 
 
         echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
-
-    - name: Generate TF docs
-      uses: terraform-docs/gh-actions@v1.4.1
-      with:
-        config-file: .github/.terraform-docs.yml
-        git-push: true
-        working-dir: ${{ inputs.stack }}
 
     - name: Merging Pull request
       id: merge-pull-request
