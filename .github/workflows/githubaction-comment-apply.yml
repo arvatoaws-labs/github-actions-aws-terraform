@@ -187,12 +187,20 @@ jobs:
       with:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
+    - name: Get PR Head Branch
+      id: pr-branch
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
+        HEAD_REF=$(gh pr view ${{ inputs.github_event_number }} --repo ${{ github.repository }} --json headRefName -q '.headRefName')
+        echo "head_ref=$HEAD_REF" >> $GITHUB_OUTPUT
+
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       id: checkout-pull-request
       uses: actions/checkout@v6
       with:
-        ref: refs/pull/${{ inputs.github_event_number }}/merge
+        ref: ${{ steps.pr-branch.outputs.head_ref }}
 
     - name: Check branch status (on pull request)
       if: github.event_name == 'pull_request'
