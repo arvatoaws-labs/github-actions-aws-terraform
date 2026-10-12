@@ -31,5 +31,6 @@ jobs:
       roleArn: ${{ matrix.account.roleArn }}
       profiles: ${{ needs.init.outputs.profiles }}
       environment: ${{ matrix.account.environment }}
+      excluded_resources: ${{ join(matrix.account.excludedResources, '\n') }}
       execute: true
     secrets: inherit
