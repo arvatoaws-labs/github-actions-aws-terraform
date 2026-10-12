@@ -2,8 +2,7 @@
 name: 'tf-comment'
 
 on:  # yamllint disable-line rule:truthy
-  issue_comment:
-    types: [created]
+  workflow_call:
 
 jobs:
   init:
