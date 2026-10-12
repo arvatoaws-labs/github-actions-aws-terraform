@@ -438,6 +438,9 @@ jobs:
       env:
         GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
+        set -x
+        TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
+        
         gh pr merge --merge --auto --subject "chore (automation): Tofu plans automatically applied to ${{ inputs.stack }} (${{ inputs.environment }})." --repo ${{ github.repository }} ${{ inputs.github_event_number }}
         echo "$TIMESTAMP: Successfully merged autoapplied pull request." >> error_log.txt
 
