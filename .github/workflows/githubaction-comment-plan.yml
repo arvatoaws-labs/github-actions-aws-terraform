@@ -150,8 +150,44 @@ jobs:
           ] | length')
         echo "changes=$number_of_changes" >> $GITHUB_OUTPUT
     - name: Upload ${{ inputs.stack }} Plan to S3
+      if: steps.tfplan.outcome == 'success'
       run: |
         cd ${{ inputs.stack }}
+        # Package the exact local Lambda files referenced by this saved plan.
+        # Keep plan JSON (which can contain secrets) in memory only.
+        python3 - <<'PY'
+        import hashlib
+        import json
+        import pathlib
+        import subprocess
+        import zipfile
+
+        root = pathlib.Path.cwd().resolve()
+        plan = json.loads(subprocess.check_output(['tofu', 'show', '-json', 'tfplan']))
+        files = {}
+        for change in plan.get('resource_changes', []):
+            if change.get('mode') != 'managed' or change['type'] != 'aws_lambda_function':
+                continue
+            if not {'create', 'update'}.intersection(change['change']['actions']):
+                continue
+            filename = (change['change'].get('after') or {}).get('filename')
+            if not filename:
+                continue  # S3/image-based Lambdas have no local package.
+            path = (root / filename).resolve()
+            if root not in path.parents or not path.is_file():
+                raise SystemExit('Missing or out-of-stack Lambda package: ' + change['address'])
+            files[path.relative_to(root).as_posix()] = path.read_bytes()
+        manifest = {
+            'plan_sha256': hashlib.sha256(pathlib.Path('tfplan').read_bytes()).hexdigest(),
+            'files': {name: hashlib.sha256(data).hexdigest() for name, data in files.items()},
+        }
+        with zipfile.ZipFile('lambda-plan-artifacts.zip', 'w', zipfile.ZIP_DEFLATED) as bundle:
+            bundle.writestr('manifest.json', json.dumps(manifest))
+            for name, data in files.items():
+                bundle.writestr(name, data)
+        print('Saved Lambda packages:', len(files))
+        PY
+        aws s3 cp ./lambda-plan-artifacts.zip s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
         aws s3 cp ./tfplan s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/
 
     # CONCLUDE

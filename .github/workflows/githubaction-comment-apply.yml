@@ -213,6 +213,43 @@ jobs:
       run: |
         find ${{ inputs.stack }}/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
 
+    - name: Restore Lambda packages from plan
+      run: |
+        cd ${{ inputs.stack }}
+        # Restore after init and legacy packaging, which otherwise discard or rebuild files.
+        # A missing bundle fails closed: generate a fresh plan with this workflow.
+        aws s3 cp s3://${{ inputs.s3bucketName }}/plans/${{ github.repository }}/${{ inputs.stack }}/${{ inputs.github_event_number }}/lambda-plan-artifacts.zip ./lambda-plan-artifacts.zip
+        python3 - <<'PY'
+        import hashlib
+        import json
+        import pathlib
+        import zipfile
+
+        root = pathlib.Path.cwd().resolve()
+        with zipfile.ZipFile('lambda-plan-artifacts.zip') as bundle:
+            manifest = json.loads(bundle.read('manifest.json'))
+            plan_hash = hashlib.sha256(pathlib.Path('tfplan').read_bytes()).hexdigest()
+            if manifest['plan_sha256'] != plan_hash:
+                raise SystemExit('Lambda packages do not match the saved plan; re-plan.')
+            files = {}
+            for name, expected_hash in manifest['files'].items():
+                relative = pathlib.PurePosixPath(name)
+                if relative.is_absolute() or '..' in relative.parts:
+                    raise SystemExit('Unsafe Lambda package path')
+                path = (root / name).resolve()
+                if root not in path.parents:
+                    raise SystemExit('Lambda package path escapes the stack')
+                data = bundle.read(name)
+                if hashlib.sha256(data).hexdigest() != expected_hash:
+                    raise SystemExit('Lambda package checksum mismatch')
+                files[path] = data
+        # Validate the entire bundle before writing any package.
+        for path, data in files.items():
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+        print('Restored Lambda packages:', len(files))
+        PY
+
     - name: Tofu Apply
       id: apply
       continue-on-error: true
