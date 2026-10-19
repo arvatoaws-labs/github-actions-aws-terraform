@@ -35,7 +35,7 @@ jobs:
       profiles: ${{ needs.init.outputs.profiles }}
       environment: ${{ matrix.account.environment }}
       excluded_resources: ${{ join(matrix.account.excludedResources, '\n') }}
-      ModulesOwner: ${{ inputs.ModulesOwner }}
+      owner: ${{ inputs.ModulesOwner }}
       execute: true
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
