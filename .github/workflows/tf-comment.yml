@@ -48,7 +48,7 @@ jobs:
       github_event_issue_comments_url: ${{ github.event.issue.comments_url }}
       excluded_resources: ${{ join(matrix.account.excludedResources, '\n') }}
       ModulesOrgOwner: ${{ inputs.ModulesOrgOwner }}
-      owner: ${{ inputs.OrgOwner }}
+      OrgOwner: ${{ inputs.OrgOwner }}
       autoapply: ${{ matrix.account.autoapply }}
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
@@ -86,7 +86,7 @@ jobs:
       github_event_issue_comments_url: ${{ github.event.issue.comments_url }}
       excluded_resources: ${{ join(matrix.account.excludedResources, '\n') }}
       ModulesOrgOwner: ${{ inputs.ModulesOrgOwner }}
-      owner: ${{ inputs.OrgOwner }}
+      OrgOwner: ${{ inputs.OrgOwner }}
       github_event_repository_url: ${{ github.event.repository.url }}
       do_merge_on_success: true
     secrets:

@@ -44,7 +44,7 @@ jobs:
       autoapply: ${{ matrix.account.autoapply }}
       excluded_resources: ${{ join(matrix.account.excludedResources, '\n') }}
       ModulesOrgOwner: ${{ inputs.ModulesOrgOwner }}
-      owner: ${{ inputs.OrgOwner }}
+      OrgOwner: ${{ inputs.OrgOwner }}
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
