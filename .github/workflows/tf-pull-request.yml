@@ -1,10 +1,14 @@
 ---
-name: 'tf-scheduled-plan'
+name: 'tf-pull-request'
 
 on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
-      ModulesOwner:
+      OrgOwner:
+        required: false
+        type: string
+        default: "arvatoaws"
+      ModulesOrgOwner:
         required: false
         type: string
         default: "arvatoaws"
@@ -14,29 +18,33 @@ jobs:
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
 
   tf-plan:
-
+    needs: init
+    # Required permissions
     permissions:
       actions: read
       id-token: write
       contents: read
       pull-requests: write
 
-    needs: init
-
     strategy:
       matrix: 
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
     if: ${{ needs.init.outputs.accounts_count > 0 }}
-    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-scheduled-plan.yml@v2
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
     with:
+      execute: ${{ contains(github.event.pull_request.labels.*.name, format('terraform-{0}-changed', matrix.account.stack) ) }}
       stack: ${{ matrix.account.stack }}
       region: ${{ matrix.account.region }}
       roleArn: ${{ matrix.account.roleArn }}
       profiles: ${{ needs.init.outputs.profiles }}
       environment: ${{ matrix.account.environment }}
+      s3bucketName: ${{ matrix.account.s3bucketName }}
+      github_event_number: ${{ github.event.number }}
+      github_event_issue_comments_url: ${{ github.event.pull_request.comments_url }}
+      autoapply: ${{ matrix.account.autoapply }}
       excluded_resources: ${{ join(matrix.account.excludedResources, '\n') }}
-      owner: ${{ inputs.ModulesOwner }}
-      execute: true
+      ModulesOrgOwner: ${{ inputs.ModulesOrgOwner }}
+      owner: ${{ inputs.OrgOwner }}
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}

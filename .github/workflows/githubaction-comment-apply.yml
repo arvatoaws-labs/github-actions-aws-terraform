@@ -52,7 +52,11 @@ on:
         required: false
         type: string
         default: ""
-      owner:
+      OrgOwner:
+        required: false
+        type: string
+        default: "arvatoaws"
+      ModulesOrgOwner:
         required: false
         type: string
         default: "arvatoaws"
@@ -170,7 +174,7 @@ jobs:
       with:
         client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        owner: ${{ inputs.owner }}
+        owner: ${{ inputs.OrgOwner }}
 
     # Get the github token with access to the relevant repositories from the app
     - name: Generate modules token
@@ -179,7 +183,7 @@ jobs:
       with:
         client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-        owner: arvatoaws
+        owner: ${{ inputs.ModulesOrgOwner }}
 
     # Configure github access
     - uses: de-vri-es/setup-git-credentials@v2
