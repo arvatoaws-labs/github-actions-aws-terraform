@@ -198,7 +198,7 @@ jobs:
       shell: bash
 
     - name: terraform plan ${{ inputs.stack }}
-      uses: dflook/tofu-plan@v2
+      uses: dflook/tofu-plan@v3
       with:
         path: ${{ inputs.stack }}
         var_file: |
