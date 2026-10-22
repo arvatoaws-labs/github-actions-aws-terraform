@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  OPENTOFU_VERSION: "~> 1.13"
+  OPENTOFU_VERSION: "v1.13.2"
 
 on:
   workflow_call:
