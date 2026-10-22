@@ -286,7 +286,7 @@ jobs:
 
     - name: terraform plan ${{ inputs.stack }}
       id: tfplan
-      uses: dflook/tofu-plan@v3
+      uses: dflook/tofu-plan@v2
       with:
         path: ${{ inputs.stack }}
         add_github_comment: always-new

@@ -286,7 +286,7 @@ jobs:
 
     - name: terraform apply ${{ inputs.stack }}
       id: tfapply
-      uses: dflook/tofu-apply@v3
+      uses: dflook/tofu-apply@v2
       with:
         path: ${{ inputs.stack }}
         label: ${{ inputs.stack }} (${{ inputs.environment }})

@@ -135,7 +135,7 @@ jobs:
 
     - name: terraform check ${{ inputs.stack }}
       id: check
-      uses: dflook/tofu-check@v3
+      uses: dflook/tofu-check@v2
       with:
         path: ${{ inputs.stack }}
         var_file: |
