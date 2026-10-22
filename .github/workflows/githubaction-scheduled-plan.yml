@@ -206,7 +206,6 @@ jobs:
         exclude: |
           ${{ inputs.excluded_resources }}
       env:
-        OPENTOFU_VERSION: "v1.13.2"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-modules-token.outputs.token }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
