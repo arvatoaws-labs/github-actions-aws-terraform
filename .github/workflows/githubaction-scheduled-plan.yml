@@ -198,7 +198,7 @@ jobs:
       shell: bash
 
     - name: terraform plan ${{ inputs.stack }}
-      uses: dflook/tofu-plan@v2
+      uses: dflook/tofu-plan@v3
       with:
         path: ${{ inputs.stack }}
         var_file: |
@@ -206,7 +206,6 @@ jobs:
         exclude: |
           ${{ inputs.excluded_resources }}
       env:
-        OPENTOFU_VERSION: "1.13.1"
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-modules-token.outputs.token }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

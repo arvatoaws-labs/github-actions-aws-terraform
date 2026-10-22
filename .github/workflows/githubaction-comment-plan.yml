@@ -369,7 +369,7 @@ jobs:
         )
 
       id: tfapply
-      uses: dflook/tofu-apply@v2
+      uses: dflook/tofu-apply@v3
       with:
         path: ${{ inputs.stack }}
         label: ${{ inputs.stack }} (${{ inputs.environment }})
