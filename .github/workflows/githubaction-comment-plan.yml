@@ -359,6 +359,16 @@ jobs:
 
         echo "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
+    - name: Generate TF docs
+      if: success()
+      uses: terraform-docs/gh-actions@v1.4.1
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      with:
+        config-file: .github/.terraform-docs.yml
+        git-push: true
+        working-dir: ${{ inputs.stack }}
+
     - name: terraform apply ${{ inputs.stack }}
 
       if: |
