@@ -56,7 +56,7 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "addLabels": ["minor-arvatoaws"],
+      "addLabels": ["minor-arvatoaws-terraform"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "grouped minor/patch updates - arvatoaws terraform github-actions",
       "groupSlug": "github-actions-arvatoaws-terraform",
