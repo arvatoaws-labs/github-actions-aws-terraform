@@ -240,26 +240,26 @@ jobs:
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
         # 1. Get branch info via GitHub CLI
-        PR_DATA=$(gh pr view ${{ github.event.issue.number }} --repo ${{ github.repository }} --json baseRefName,headRefName)
-        BASE_BRANCH=$(echo $PR_DATA | jq -r '.baseRefName')
-        HEAD_BRANCH=$(echo $PR_DATA | jq -r '.headRefName')
+        PR_DATA=$(gh pr view ${{ inputs.github_event_number }} --repo ${{ github.repository }} --json baseRefName,headRefName)
+        BASE_BRANCH=$(echo "$PR_DATA" | jq -r '.baseRefName')
+        HEAD_BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
 
         echo "Comparing $HEAD_BRANCH against $BASE_BRANCH"
 
-        # 2. Fetch both branches explicitly
-        git fetch origin $BASE_BRANCH:$BASE_BRANCH
-        git fetch origin $HEAD_BRANCH:$HEAD_BRANCH
+        # 2. Fetch remote-tracking branches (avoids touching the checked-out local branch)
+        git fetch origin "+refs/heads/$BASE_BRANCH:refs/remotes/origin/$BASE_BRANCH"
+        git fetch origin "+refs/heads/$HEAD_BRANCH:refs/remotes/origin/$HEAD_BRANCH"
 
-        # 3. Compare
-        BASE_SHA=$(git rev-parse $BASE_BRANCH)
-        MERGE_BASE=$(git merge-base $HEAD_BRANCH $BASE_BRANCH)
+        # 3. Compare remote references
+        BASE_SHA=$(git rev-parse "origin/$BASE_BRANCH")
+        MERGE_BASE=$(git merge-base "origin/$HEAD_BRANCH" "origin/$BASE_BRANCH")
 
         if [ "$BASE_SHA" != "$MERGE_BASE" ]; then
           echo "$TIMESTAMP: PR branch is out of date with $BASE_BRANCH - **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
           echo "::error::PR branch is out of date with $BASE_BRANCH"
           gh label create "outdated" --color "ff0000" --force
-          gh pr edit ${{ github.event.issue.number }} --repo ${{ github.repository }} --add-label "outdated" || true
+          gh pr edit ${{ inputs.github_event_number }} --repo ${{ github.repository }} --add-label "outdated" || true
           exit 1
         else
           echo "PR is up to date!"
