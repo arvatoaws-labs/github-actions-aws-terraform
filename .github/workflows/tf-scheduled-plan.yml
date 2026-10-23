@@ -27,7 +27,7 @@ on:  # yamllint disable-line rule:truthy
         required: true
       TF_VAR_SDMS_CLIENT_SECRET:
         required: true
-        
+
 jobs:
   init:
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
@@ -37,7 +37,7 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: read
+      contents: write
       pull-requests: write
 
     needs: init
