@@ -56,30 +56,42 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "addLabels": ["minor", "github-actions", "arvatoaws-terraform"],
+      "addLabels": [
+        "minor", 
+        "github-actions", 
+        "arvatoaws-terraform"
+      ],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "grouped minor/patch updates - arvatoaws terraform github-actions",
       "groupSlug": "github-actions-arvatoaws-terraform",
       "matchPackageNames": [
-        "arvatoaws-labs/github-actions-aws-terraform/{/,}**"
+        "arvatoaws-labs/github-actions-aws-terraform"
       ]
     },
     {
       "matchManagers": ["github-actions"],
-      "addLabels": ["minor", "github-actions", "arvatoaws"],
+      "addLabels": [
+        "minor", 
+        "github-actions", 
+        "arvatoaws"
+      ],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "grouped minor/patch updates - arvatoaws github-actions",
       "groupSlug": "github-actions-arvatoaws",
       "matchPackageNames": [
         "arvatoaws/{/,}**",
         "arvatoaws-labs/{/,}**",
-        "!arvatoaws-labs/github-actions-aws-terraform/{/,}**"
+        "!arvatoaws-labs/github-actions-aws-terraform"
       ]
     },
     {
       "matchManagers": ["github-actions"],
       "matchUpdateTypes": ["minor", "patch"],
-      "addLabels": ["minor", "github-actions", "other"],
+      "addLabels": [
+        "minor", 
+        "github-actions", 
+        "other"
+      ],
       "groupName": "grouped minor/patch updates - github-actions",
       "groupSlug": "github-actions",
       "matchPackageNames": [
