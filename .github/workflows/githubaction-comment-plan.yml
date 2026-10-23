@@ -76,7 +76,7 @@ jobs:
     permissions:
       actions: read
       id-token: write
-      contents: read
+      contents: write
       pull-requests: write
     defaults:
       run:
@@ -183,12 +183,22 @@ jobs:
       with:
         credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
-    # Checkout the repository to the GitHub Actions runner
+    # Resolve the PR's actual source branch
+    - name: Get PR Head Branch
+      id: pr-branch
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
+        HEAD_BRANCH=$(gh pr view "${{ inputs.github_event_number }}" --repo "${{ github.repository }}" --json headRefName -q .headRefName)
+        echo "branch=$HEAD_BRANCH" >> "$GITHUB_OUTPUT"
+
+    # Checkout the repository attached to the PR source branch
     - name: Checkout
       id: checkout-pull-request
       uses: actions/checkout@v7
       with:
-        ref: refs/pull/${{ inputs.github_event_number }}/merge
+        ref: ${{ steps.pr-branch.outputs.branch }}
+        token: ${{ steps.generate-token.outputs.token }}
         fetch-depth: 0
 
     - name: Check branch status (on pull request)
