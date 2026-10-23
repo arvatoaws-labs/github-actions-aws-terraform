@@ -62,8 +62,6 @@
         "arvatoaws-terraform"
       ],
       "matchUpdateTypes": ["minor", "patch"],
-      "groupName": "grouped minor/patch updates - arvatoaws terraform github-actions",
-      "groupSlug": "github-actions-arvatoaws-terraform",
       "automerge": true,
       "matchPackageNames": [
         "arvatoaws-labs/github-actions-aws-terraform"
