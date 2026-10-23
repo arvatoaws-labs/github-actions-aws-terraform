@@ -72,7 +72,8 @@
       "groupSlug": "github-actions-arvatoaws",
       "matchPackageNames": [
         "arvatoaws/{/,}**",
-        "arvatoaws-labs/{/,}**"
+        "arvatoaws-labs/{/,}**",
+        "!arvatoaws-labs/github-actions-aws-terraform/{/,}**"
       ]
     },
     {
@@ -83,7 +84,11 @@
       ],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "grouped minor/patch updates - github-actions",
-      "groupSlug": "github-actions"
+      "groupSlug": "github-actions",
+      "matchPackageNames": [
+        "!arvatoaws/{/,}**",
+        "!arvatoaws-labs/{/,}**"
+      ]
     },
     {
       "matchManagers": ["github-actions"],
