@@ -56,7 +56,7 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "addLabels": ["minor-arvatoaws-terraform"],
+      "addLabels": ["minor", "github-actions", "arvatoaws-terraform"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "grouped minor/patch updates - arvatoaws terraform github-actions",
       "groupSlug": "github-actions-arvatoaws-terraform",
@@ -66,7 +66,7 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "addLabels": ["minor-arvatoaws"],
+      "addLabels": ["minor", "github-actions", "arvatoaws"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "grouped minor/patch updates - arvatoaws github-actions",
       "groupSlug": "github-actions-arvatoaws",
@@ -78,11 +78,8 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "addLabels": [
-        "github-actions-changed",
-        "minor"
-      ],
       "matchUpdateTypes": ["minor", "patch"],
+      "addLabels": ["minor", "github-actions", "other"],
       "groupName": "grouped minor/patch updates - github-actions",
       "groupSlug": "github-actions",
       "matchPackageNames": [
@@ -93,7 +90,7 @@
     {
       "matchManagers": ["github-actions"],
       "addLabels": [
-        "github-actions-changed",
+        "github-actions",
         "major"
       ],
       "matchUpdateTypes": ["major"]
