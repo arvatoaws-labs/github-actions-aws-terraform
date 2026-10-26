@@ -60,6 +60,10 @@ jobs:
     name: 'Plan Tofu'
     runs-on: arvato
 
+    environment:
+      name: ${{ inputs.stack }}
+      deployment: false
+
     permissions:
       id-token: write
       contents: read
