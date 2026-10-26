@@ -86,9 +86,15 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
+
     defaults:
       run:
         shell: bash
+
+    environment:
+      name: ${{ inputs.stack }}
+      deployment: true
+      
     if: ${{ inputs.execute == true }}
 
     steps:
