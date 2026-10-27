@@ -61,13 +61,20 @@ jobs:
   tofu:
     name: 'Drift Tofu'
     runs-on: arvato
+
+    environment:
+      name: ${{ inputs.stack }}
+      deployment: true
+
     permissions:
       id-token: write
       contents: read
       pull-requests: write
+
     defaults:
       run:
         shell: bash
+
     if: ${{ inputs.execute == true }}
 
     steps:
