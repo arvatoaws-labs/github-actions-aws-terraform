@@ -1,7 +1,7 @@
 ---
 name: 'tf-pull-request-labeler'
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       OrgOwner:
@@ -12,20 +12,10 @@ on:
       terraform-changed:
         description: "Returns 'true' if changes in valid Terraform stack directories were detected, otherwise 'false'."
         value: ${{ jobs.check-and-label-dirs.outputs.terraform-changed }}
-    secrets: # 2. Explicitly declare required secrets for cross-org calls
+    secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
-        required: true
-      TERRAFORM_GITHUB_ACTION_APP_ID:
-        required: true
-      TF_VAR_SDMSI_SUBSCRIPTION_KEY:
-        required: true
-      TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY:
-        required: true
-      TF_VAR_SDMS_AUTH_RESOURCE:
-        required: true
-      TF_VAR_SDMS_CLIENT_SECRET:
         required: true
 
 jobs:
@@ -41,77 +31,78 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      issues: write
 
     outputs:
-      terraform-changed: ${{ steps.detect-and-label.outputs.terraform_changed }}
+      terraform-changed: ${{ steps.detect-and-label.outputs.terraform-changed }}
 
     steps:
-      # Get the github token with access to the relevant repositories from the app
-      - name: Generate token
-        id: generate-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
-          private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-          owner: ${{ inputs.OrgOwner }}
+    # Get the github token with access to the relevant repositories from the app
+    - name: Generate token
+      id: generate-token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+        private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        owner: ${{ inputs.OrgOwner }}
 
-      # Configure github access
-      - uses: de-vri-es/setup-git-credentials@v2
-        id: configure-git-credentials
-        with:
-          credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
+    # Configure github access
+    - uses: de-vri-es/setup-git-credentials@v2
+      id: configure-git-credentials
+      with:
+        credentials: https://oauth:${{ steps.generate-token.outputs.token }}@github.com/
 
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
+    - name: Checkout code
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
 
-      - name: Find modified directories and apply labels
-        id: detect-and-label
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          ACCOUNTS: ${{ needs.init.outputs.accounts }}
-        run: |
-          # Fetch target base branch for diff comparison
-          git fetch origin ${{ github.base_ref }}
+    - name: Find modified directories and apply labels
+      id: detect-and-label
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        ACCOUNTS: ${{ needs.init.outputs.accounts }}
+      run: |
+        # Fetch target base branch for diff comparison
+        git fetch origin ${{ github.base_ref }}
 
-          # Extract unique top-level directories containing changes
-          CHANGED_DIRS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | xargs -L1 dirname | cut -d/ -f1 | sort -u)
+        # Extract unique top-level directories containing changes
+        CHANGED_DIRS=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | xargs -L1 dirname | cut -d/ -f1 | sort -u)
 
-          echo "Changed directories:"
-          echo "$CHANGED_DIRS"
+        echo "Changed directories:"
+        echo "$CHANGED_DIRS"
 
-          VALID_STACKS=$(echo "$ACCOUNTS" | jq -r '[.[].stack] | .[]')
-          TERRAFORM_CHANGED=false
+        VALID_STACKS=$(echo "$ACCOUNTS" | jq -r '[.[].stack] | .[]')
+        TERRAFORM_CHANGED=false
 
-          # Create and assign 'stack:<dir>' label if directory matches a valid stack name
-          for dir in $CHANGED_DIRS; do
-            for stack in $VALID_STACKS; do
-              if [ "$dir" = "$stack" ]; then
-                gh label create "terraform-$dir-changed" --color "008000" --force 2>/dev/null || true
-                gh pr edit "$PR_NUMBER" --add-label "terraform-$dir-changed"
-                TERRAFORM_CHANGED=true
-                break
-              fi
-            done
+        # Create and assign 'stack:<dir>' label if directory matches a valid stack name
+        for dir in $CHANGED_DIRS; do
+          for stack in $VALID_STACKS; do
+            if [ "$dir" = "$stack" ]; then
+              gh label create "terraform-$dir-changed" --color "008000" --force 2>/dev/null || true
+              gh pr edit "$PR_NUMBER" --add-label "terraform-$dir-changed"
+              TERRAFORM_CHANGED=true
+              break
+            fi
           done
-          
-          if [ "$TERRAFORM_CHANGED" = true ]; then
-            echo "Terraform changes detected."
-            echo "terraform_changed='true'" >> "$GITHUB_OUTPUT"
-            gh label create "terraform-changed" --color "008000" --force 2>/dev/null || true
-            gh pr edit "$PR_NUMBER" --add-label "terraform-changed"
-          else
-            echo "No Terraform changes detected."
-            echo "terraform_changed='false'" >> "$GITHUB_OUTPUT"
-          fi
+        done
 
-      - name: Trigger Terraform Actions
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-        run: |        
-          echo "Prepared labels for Pull Request."
-          gh label create "pull-request-prepared" --color "008000" --force 2>/dev/null || true
-          gh pr edit ${{ github.event.pull_request.number }} --add-label "pull-request-prepared"
+        if [ "$TERRAFORM_CHANGED" = true ]; then
+          echo "Terraform changes detected."
+          echo "terraform-changed=true" >> "$GITHUB_OUTPUT"
+          gh label create "terraform-changed" --color "008000" --force 2>/dev/null || true
+          gh pr edit "$PR_NUMBER" --add-label "terraform-changed"
+        else
+          echo "No Terraform changes detected."
+          echo "terraform-changed=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Trigger Terraform Actions
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
+        echo "Prepared labels for Pull Request."
+        gh label create "pull-request-prepared" --color "008000" --force 2>/dev/null || true
+        gh pr edit ${{ github.event.pull_request.number }} --add-label "pull-request-prepared"
