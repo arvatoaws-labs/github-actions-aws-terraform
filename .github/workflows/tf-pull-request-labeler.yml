@@ -41,9 +41,6 @@ jobs:
       contents: write
       pull-requests: write
 
-    strategy:
-      matrix: 
-        account: ${{ fromJSON(needs.init.outputs.accounts) }}
     if: ${{ needs.init.outputs.accounts_count > 0 && github.event.pull_request.user.login != 'renovate[bot]' && github.event.action == 'opened' }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-pull-request-labeler.yml@v2
     with:
@@ -59,6 +56,7 @@ jobs:
 
   tf-plan:
     needs: [init, tf-labeler]
+
     # Required permissions
     permissions:
       actions: read
