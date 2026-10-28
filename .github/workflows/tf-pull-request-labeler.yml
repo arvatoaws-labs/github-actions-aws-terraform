@@ -33,6 +33,8 @@ jobs:
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
 
   tf-labeler:
+    needs: init
+    
     # Required permissions
     permissions:
       actions: read
