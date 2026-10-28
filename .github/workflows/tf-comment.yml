@@ -87,7 +87,6 @@ jobs:
     concurrency:
       group: tf-apply-${{ matrix.account.stack }}
       cancel-in-progress: false
-      queue: max
 
     strategy:
       max-parallel: 1
