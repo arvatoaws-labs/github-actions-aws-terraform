@@ -12,6 +12,9 @@ on:  # yamllint disable-line rule:truthy
       terraform-changed:
         description: "Returns 'true' if changes in valid Terraform stack directories were detected, otherwise 'false'."
         value: ${{ jobs.check-and-label-dirs.outputs.terraform-changed }}
+      labels:
+        description: "JSON array containing all labels currently applied to the pull request."
+        value: ${{ jobs.check-and-label-dirs.outputs.labels }}
     secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
@@ -34,6 +37,7 @@ jobs:
 
     outputs:
       terraform-changed: ${{ steps.detect-and-label.outputs.terraform-changed }}
+      labels: ${{ steps.detect-and-label.outputs.labels }}
 
     steps:
     # Get the github token with access to the relevant repositories from the app
@@ -97,3 +101,8 @@ jobs:
           echo "No Terraform changes detected."
           echo "terraform-changed=false" >> "$GITHUB_OUTPUT"
         fi
+
+        # Fetch updated list of all labels from the PR as a compact JSON string
+        ALL_LABELS=$(gh pr view "$PR_NUMBER" --json labels | jq -c '[.labels[].name]')
+        echo "Labels on PR: $ALL_LABELS"
+        echo "labels=$ALL_LABELS" >> "$GITHUB_OUTPUT"

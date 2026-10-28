@@ -65,7 +65,7 @@ jobs:
     if: ${{ needs.init.outputs.accounts_count > 0 && needs.tf-labeler.outputs.terraform-changed == 'true' }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
     with:
-      execute: true
+      execute: ${{ contains(fromJSON(needs.tf-labeler.outputs.labels || '[]'), format('terraform-{0}-changed', matrix.account.stack)) }}
       stack: ${{ matrix.account.stack }}
       region: ${{ matrix.account.region }}
       roleArn: ${{ matrix.account.roleArn }}
