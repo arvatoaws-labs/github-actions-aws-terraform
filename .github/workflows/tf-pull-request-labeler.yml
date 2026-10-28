@@ -40,7 +40,6 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-      issues: write
       
 
     if: ${{ needs.init.outputs.accounts_count > 0 && github.event.pull_request.user.login != 'renovate[bot]' && github.event.action == 'opened' }}

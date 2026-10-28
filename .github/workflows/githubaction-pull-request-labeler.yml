@@ -31,7 +31,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      issues: write
 
     outputs:
       terraform-changed: ${{ steps.detect-and-label.outputs.terraform-changed }}
