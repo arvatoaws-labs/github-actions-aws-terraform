@@ -100,12 +100,12 @@ jobs:
           
           if [ "$TERRAFORM_CHANGED" = true ]; then
             echo "Terraform changes detected."
-            echo "terraform_changed=true" >> "$GITHUB_OUTPUT"
+            echo "terraform_changed='true'" >> "$GITHUB_OUTPUT"
             gh label create "terraform-changed" --color "008000" --force 2>/dev/null || true
             gh pr edit "$PR_NUMBER" --add-label "terraform-changed"
           else
             echo "No Terraform changes detected."
-            echo "terraform_changed=false" >> "$GITHUB_OUTPUT"
+            echo "terraform_changed='false'" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Trigger Terraform Actions
