@@ -84,7 +84,13 @@ jobs:
 
     needs: init
 
+    concurrency:
+      group: tf-apply-${{ matrix.account.stack }}
+      cancel-in-progress: false
+      queue: max
+
     strategy:
+      max-parallel: 1
       matrix: 
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
     if: ${{ github.event.issue.pull_request && startsWith(github.event.comment.body, '/apply') }}
@@ -95,7 +101,7 @@ jobs:
       roleArn: ${{ matrix.account.roleArn }}
       profiles: ${{ needs.init.outputs.profiles }}
       environment: ${{ matrix.account.environment }}
-      execute: ${{ contains(github.event.issue.labels.*.name, format('terraform-{0}-changed', matrix.account.stack) ) && contains(github.event.issue.labels.*.name, format('terraform-{0}-planned', matrix.account.stack) ) && !contains(github.event.issue.labels.*.name, 'do-not-apply') }}
+      execute: ${{ contains(github.event.issue.labels.*.name, format('terraform-{0}-changed', matrix.account.stack) ) && contains(github.event.issue.labels.*.name, format('terraform-{0}-planned', matrix.account.stack) ) }}
       s3bucketName: ${{ matrix.account.s3bucketName }}
       github_event_number: ${{ github.event.issue.number }}
       github_event_issue_comments_url: ${{ github.event.issue.comments_url }}
@@ -103,7 +109,7 @@ jobs:
       ModulesOrgOwner: ${{ inputs.ModulesOrgOwner }}
       OrgOwner: ${{ inputs.OrgOwner }}
       github_event_repository_url: ${{ github.event.repository.url }}
-      do_merge_on_success: true
+      do_merge_on_success: ${{ !contains(github.event.issue.labels.*.name, 'do-not-apply') }}
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
