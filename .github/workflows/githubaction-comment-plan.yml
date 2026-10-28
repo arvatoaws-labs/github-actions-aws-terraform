@@ -337,7 +337,12 @@ jobs:
         echo "$TIMESTAMP: Tofu plan failed on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
     - name: Generate TF docs
-      if: success()
+      if: |
+        inputs.autoapply == true && 
+        steps.tfplan.outputs.changes == 'false' && 
+        (
+          contains(join(github.event.pull_request.labels.*.name, ','), 'terraform-autoapply-allowed') || contains(join(github.event.issue.labels.*.name, ','), 'terraform-autoapply-allowed')
+        )
       uses: terraform-docs/gh-actions@v1.4.1
       env:
         GH_TOKEN: ${{ steps.generate-token.outputs.token }}

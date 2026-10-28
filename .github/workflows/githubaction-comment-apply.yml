@@ -303,6 +303,21 @@ jobs:
           ./aws/install
           /usr/local/bin/aws --version
 
+    - name: Generate TF docs
+      uses: terraform-docs/gh-actions@v1.4.1
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      with:
+        output-file: README.md
+        output-method: inject
+        indention: 3
+        template: |-
+          <!-- BEGIN_TF_DOCS -->
+          {{ .Content }}
+          <!-- END_TF_DOCS -->
+        git-push: true
+        working-dir: ${{ inputs.stack }}
+
     - name: Add labels to GitHub PR
       id: add-labels-to-pull-request
       env:
