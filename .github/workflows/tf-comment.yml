@@ -84,10 +84,6 @@ jobs:
 
     needs: init
 
-    concurrency:
-      group: tf-apply-${{ matrix.account.stack }}
-      cancel-in-progress: false
-
     strategy:
       max-parallel: 1
       matrix: 
