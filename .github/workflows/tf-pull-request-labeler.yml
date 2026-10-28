@@ -29,11 +29,7 @@ on:  # yamllint disable-line rule:truthy
         required: true
 
 jobs:
-  init:
-    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
-
   tf-labeler:
-    needs: init
     # Required permissions
     permissions:
       actions: read
@@ -48,6 +44,10 @@ jobs:
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
+  init:
+    needs: tf-labeler
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
 
   tf-plan:
     needs: [init, tf-labeler]
