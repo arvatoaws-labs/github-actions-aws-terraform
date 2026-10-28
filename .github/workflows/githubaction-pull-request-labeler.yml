@@ -79,6 +79,7 @@ jobs:
 
         VALID_STACKS=$(echo "$ACCOUNTS" | jq -r '[.[].stack] | .[]')
         TERRAFORM_CHANGED=false
+        CHANGED_STACK_COUNT=0
 
         # Create and assign 'stack:<dir>' label if directory matches a valid stack name
         for dir in $CHANGED_DIRS; do
@@ -87,10 +88,19 @@ jobs:
               gh label create "terraform-$dir-changed" --color "008000" --force 2>/dev/null || true
               gh pr edit "$PR_NUMBER" --add-label "terraform-$dir-changed"
               TERRAFORM_CHANGED=true
+              ((CHANGED_STACK_COUNT++))
               break
             fi
           done
         done
+
+        echo "Changed stack count: $CHANGED_STACK_COUNT"
+
+        if [ "$CHANGED_STACK_COUNT" -gt 1 ]; then
+          echo "add do-not-apply label"
+          gh label create "do-not-apply" --color "B60205" --force 2>/dev/null || true
+          gh pr edit "$PR_NUMBER" --add-label "do-not-apply"
+        fi        
 
         if [ "$TERRAFORM_CHANGED" = true ]; then
           echo "Terraform changes detected."
