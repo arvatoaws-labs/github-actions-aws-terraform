@@ -97,11 +97,3 @@ jobs:
           echo "No Terraform changes detected."
           echo "terraform-changed=false" >> "$GITHUB_OUTPUT"
         fi
-
-    - name: Trigger Terraform Actions
-      env:
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-      run: |
-        echo "Prepared labels for Pull Request."
-        gh label create "pull-request-prepared" --color "008000" --force 2>/dev/null || true
-        gh pr edit ${{ github.event.pull_request.number }} --add-label "pull-request-prepared"

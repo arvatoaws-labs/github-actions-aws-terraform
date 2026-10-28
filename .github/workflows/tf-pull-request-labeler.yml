@@ -40,7 +40,6 @@ jobs:
       id-token: write
       contents: write
       pull-requests: write
-      
 
     if: ${{ needs.init.outputs.accounts_count > 0 && github.event.pull_request.user.login != 'renovate[bot]' && github.event.action == 'opened' }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-pull-request-labeler.yml@v2
@@ -49,6 +48,7 @@ jobs:
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
   tf-plan:
     needs: [init, tf-labeler]
 
@@ -65,7 +65,7 @@ jobs:
     if: ${{ needs.init.outputs.accounts_count > 0 && needs.tf-labeler.outputs.terraform-changed == 'true' }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
     with:
-      execute: ${{ contains(github.event.pull_request.labels.*.name, format('terraform-{0}-changed', matrix.account.stack) ) }}
+      execute: true
       stack: ${{ matrix.account.stack }}
       region: ${{ matrix.account.region }}
       roleArn: ${{ matrix.account.roleArn }}
