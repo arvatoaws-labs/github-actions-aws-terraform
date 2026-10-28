@@ -78,7 +78,7 @@ on:
 
 jobs:
   tofu:
-    name: 'Apply Tofu'
+    name: 'Apply Tofu (${{ inputs.stack }})'
     runs-on: arvato
 
     permissions:
