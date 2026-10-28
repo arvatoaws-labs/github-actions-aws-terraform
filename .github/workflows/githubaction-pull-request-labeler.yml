@@ -1,3 +1,4 @@
+---
 name: 'tf-pull-request-labeler'
 
 on:
@@ -7,6 +8,10 @@ on:
         required: false
         type: string
         default: "arvatoaws"
+    outputs:
+      terraform-changed:
+        description: "Returns 'true' if changes in valid Terraform stack directories were detected, otherwise 'false'."
+        value: ${{ jobs.check-and-label-dirs.outputs.terraform-changed }}
     secrets: # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
