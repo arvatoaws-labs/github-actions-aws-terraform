@@ -67,7 +67,7 @@ jobs:
     strategy:
       matrix: 
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
-    if: ${{ needs.init.outputs.accounts_count > 0 && needs.tf-labeler.outputs.terraform_changed == 'true' }}
+    if: ${{ needs.init.outputs.accounts_count > 0 && needs.tf-labeler.outputs.terraform-changed == 'true' }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
     with:
       execute: ${{ contains(github.event.pull_request.labels.*.name, format('terraform-{0}-changed', matrix.account.stack) ) }}
