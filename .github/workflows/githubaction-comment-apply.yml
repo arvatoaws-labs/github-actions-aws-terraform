@@ -76,6 +76,8 @@ on:
       TF_VAR_SDMS_CLIENT_SECRET:
         required: true
 
+run-name: 'Apply Tofu (${{ inputs.stack }})'
+
 jobs:
   tofu:
     name: 'Apply Tofu (${{ inputs.stack }})'
@@ -330,7 +332,7 @@ jobs:
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
 
         gh label create "terraform-applied" --color "008000" --force
-        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied" 
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied"
 
         echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
