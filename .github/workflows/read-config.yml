@@ -18,6 +18,8 @@ on:
         value: ${{ jobs.read-repo-config.outputs.accounts_count }}
       profiles:
         value: ${{ jobs.read-repo-config.outputs.profiles }}
+      terraform_changed:
+        value: ${{ jobs.read-repo-config.outputs.terraform_changed }}
 
 
 jobs:
@@ -31,18 +33,18 @@ jobs:
     runs-on: arvato
 
     outputs:
-      config_data: ${{ steps.read-yaml.outputs.config_data }}
-      accounts: ${{ steps.read-yaml.outputs.accounts }}
-      stacks: ${{ steps.read-yaml.outputs.stacks }}
-      accounts_count: ${{ steps.read-yaml.outputs.accounts_count }}
-      profiles: ${{ steps.read-yaml.outputs.profiles }}
+      config_data: ${{ steps.read-config-file.outputs.config_data }}
+      accounts: ${{ steps.read-config-file.outputs.accounts }}
+      stacks: ${{ steps.read-config-file.outputs.stacks }}
+      accounts_count: ${{ steps.read-config-file.outputs.accounts_count }}
+      profiles: ${{ steps.read-config-file.outputs.profiles }}
       terraform_changed: ${{ steps.label-count.outputs.terraform_changed }}
 
     steps:
       - uses: actions/checkout@v6
 
-      - name: Read YAML
-        id: read-yaml
+      - name: Read config file
+        id: read-config-file
 
         run: |
           if [[ -f "${{ inputs.config_file }}" ]]; then
