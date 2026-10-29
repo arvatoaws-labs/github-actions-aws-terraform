@@ -91,7 +91,7 @@ jobs:
               exit 1
           fi
 
-      - name: Count terraform-*-changed labels
+      - name: Count terraform changed labels
         id: label-count
         env:
           LABELS_JSON: ${{ toJSON(github.event.issue.labels.*.name) }}
