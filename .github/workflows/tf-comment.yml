@@ -113,27 +113,3 @@ jobs:
       TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY }}
       TF_VAR_SDMS_AUTH_RESOURCE: ${{ secrets.TF_VAR_SDMS_AUTH_RESOURCE }}
       TF_VAR_SDMS_CLIENT_SECRET: ${{ secrets.TF_VAR_SDMS_CLIENT_SECRET }}
-  
-  add-labels:
-    # Required permissions
-    permissions:
-      actions: read
-      id-token: write
-      contents: write
-      pull-requests: write
-
-    runs-on: arvato
-
-    needs: tf-apply
-
-    steps:
-      - name: Add labels to GitHub PR
-        id: add-labels-to-pull-request
-
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -x 
-
-          gh label create "terraform-applied" --color "008000" --force
-          gh pr edit ${{ github.event.issue.number }} --add-label "terraform-applied"
