@@ -104,7 +104,7 @@ jobs:
       ModulesOrgOwner: ${{ inputs.ModulesOrgOwner }}
       OrgOwner: ${{ inputs.OrgOwner }}
       github_event_repository_url: ${{ github.event.repository.url }}
-      do_merge_on_success: ${{ !contains(github.event.issue.labels.*.name, 'do-not-apply') }}
+      do_merge_on_success: ${{ needs.init.outputs.terraform_changed == '1' }}
     secrets:
       TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
