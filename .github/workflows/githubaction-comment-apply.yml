@@ -95,7 +95,7 @@ jobs:
 
     environment:
       name: ${{ inputs.stack }}
-      deployment: true
+      deployment: false
       
     if: ${{ inputs.execute == true }}
 
@@ -335,6 +335,25 @@ jobs:
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied"
 
         echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
+
+    - name: Create PR Branch Deployment Record
+      env:
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
+        PR_SHA=$(gh pr view "${{ inputs.github_event_number }}" --repo "${{ github.repository }}" --json headRefOid -q .headRefOid)
+
+        # Create deployment record for the PR head commit
+        DEPLOYMENT_ID=$(gh api "repos/${{ github.repository }}/deployments" \
+          -f ref="$PR_SHA" \
+          -f environment="${{ inputs.stack }}" \
+          -F auto_merge=false \
+          -F required_contexts='[]' \
+          -q .id)
+        
+        # Mark deployment as successful
+        gh api "repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID/statuses" \
+          -f state=success \
+          -f environment="${{ inputs.stack }}"
 
     - name: Merging Pull request
       id: merge-pull-request
