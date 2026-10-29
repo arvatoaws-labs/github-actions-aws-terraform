@@ -347,7 +347,6 @@ jobs:
           -f ref="$PR_SHA" \
           -f environment="${{ inputs.stack }}" \
           -F auto_merge=false \
-          -f 'required_contexts=[]' \
           -q .id)
         
         # Mark deployment as successful
