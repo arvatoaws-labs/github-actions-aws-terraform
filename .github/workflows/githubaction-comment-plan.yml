@@ -69,9 +69,11 @@ on:
       TF_VAR_SDMS_CLIENT_SECRET:
         required: true
 
+run-name: 'Plan Tofu (${{ inputs.stack }})'
+
 jobs:
   tofu:
-    name: 'Plan Tofu'
+    name: 'Plan Tofu (${{ inputs.stack }})'
     runs-on: arvato
     permissions:
       actions: read
