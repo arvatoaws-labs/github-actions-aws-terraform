@@ -36,6 +36,7 @@ jobs:
       stacks: ${{ steps.read-yaml.outputs.stacks }}
       accounts_count: ${{ steps.read-yaml.outputs.accounts_count }}
       profiles: ${{ steps.read-yaml.outputs.profiles }}
+      terraform_changed: ${{ steps.label-count.outputs.terraform_changed }}
 
     steps:
       - uses: actions/checkout@v6
@@ -89,3 +90,12 @@ jobs:
               echo "Error: ${{ inputs.config_file }} not found"
               exit 1
           fi
+
+      - name: Count terraform-*-changed labels
+        id: label-count
+        env:
+          LABELS_JSON: ${{ toJSON(github.event.issue.labels.*.name) }}
+        run: |
+          COUNT=$(echo "$LABELS_JSON" | jq '[.[] | select(test("^terraform-.*-changed$"))] | length')
+          echo "$COUNT terraform environments were changed."
+          echo "terraform_changed=$COUNT" >> "$GITHUB_OUTPUT"
