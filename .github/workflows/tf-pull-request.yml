@@ -32,7 +32,63 @@ jobs:
   init:
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/read-config.yml@v2
 
+  tf-labeler:
+    needs: init
+    
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+      pull-requests: write
+
+    if: ${{ needs.init.outputs.accounts_count > 0 && github.event.pull_request.user.login != 'renovate[bot]' && github.event.action == 'opened' }}
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-pull-request-labeler.yml@v2
+    with:
+      OrgOwner: ${{ inputs.OrgOwner }}
+    secrets:
+      TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+      TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+
   tf-plan:
+    needs: [init, tf-labeler]
+
+    # Required permissions
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+      pull-requests: write
+
+    strategy:
+      matrix: 
+        account: ${{ fromJSON(needs.init.outputs.accounts) }}
+    if: ${{ needs.init.outputs.accounts_count > 0 && needs.tf-labeler.outputs.terraform-changed == 'true' }}
+    uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
+    with:
+      execute: ${{ contains(fromJSON(needs.tf-labeler.outputs.labels || '[]'), format('terraform-{0}-changed', matrix.account.stack)) }}
+      stack: ${{ matrix.account.stack }}
+      region: ${{ matrix.account.region }}
+      roleArn: ${{ matrix.account.roleArn }}
+      profiles: ${{ needs.init.outputs.profiles }}
+      environment: ${{ matrix.account.environment }}
+      s3bucketName: ${{ matrix.account.s3bucketName }}
+      github_event_number: ${{ github.event.number }}
+      github_event_issue_comments_url: ${{ github.event.pull_request.comments_url }}
+      autoapply: ${{ matrix.account.autoapply }}
+      excluded_resources: ${{ join(matrix.account.excludedResources, '\n') }}
+      ModulesOrgOwner: ${{ inputs.ModulesOrgOwner }}
+      OrgOwner: ${{ inputs.OrgOwner }}
+    secrets:
+      TERRAFORM_GITHUB_ACTION_CLIENT_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+      TERRAFORM_GITHUB_ACTION_PRIVATE_KEY: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+      TERRAFORM_GITHUB_ACTION_APP_ID: ${{ secrets.TERRAFORM_GITHUB_ACTION_APP_ID }}
+      TF_VAR_SDMSI_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMSI_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY: ${{ secrets.TF_VAR_SDMS_OCP_APIM_SUBSCRIPTION_KEY }}
+      TF_VAR_SDMS_AUTH_RESOURCE: ${{ secrets.TF_VAR_SDMS_AUTH_RESOURCE }}
+      TF_VAR_SDMS_CLIENT_SECRET: ${{ secrets.TF_VAR_SDMS_CLIENT_SECRET }}
+
+  tf-plan-renovate:
     needs: init
     # Required permissions
     permissions:
@@ -44,7 +100,7 @@ jobs:
     strategy:
       matrix: 
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
-    if: ${{ needs.init.outputs.accounts_count > 0 && contains(github.event.pull_request.labels.*.name, 'terraform-changed') }}
+    if: ${{ needs.init.outputs.accounts_count > 0 && github.event.pull_request.user.login == 'renovate[bot]' && contains(github.event.pull_request.labels.*.name, 'terraform-changed') }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
     with:
       execute: ${{ contains(github.event.pull_request.labels.*.name, format('terraform-{0}-changed', matrix.account.stack) ) }}
