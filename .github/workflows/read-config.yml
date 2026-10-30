@@ -1,6 +1,7 @@
+---
 name: Read Config
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       config_file:
@@ -14,7 +15,7 @@ on:
         value: ${{ jobs.read-repo-config.outputs.accounts }}
       stacks:
         value: ${{ jobs.read-repo-config.outputs.stacks }}
-      accounts_count: 
+      accounts_count:
         value: ${{ jobs.read-repo-config.outputs.accounts_count }}
       profiles:
         value: ${{ jobs.read-repo-config.outputs.profiles }}
@@ -41,63 +42,63 @@ jobs:
       terraform_changed: ${{ steps.label-count.outputs.terraform_changed }}
 
     steps:
-      - uses: actions/checkout@v6
+    - uses: actions/checkout@v6
 
-      - name: Read config file
-        id: read-config-file
+    - name: Read config file
+      id: read-config-file
 
-        run: |
-          if [[ -f "${{ inputs.config_file }}" ]]; then
-              # Validate JSON
-              if yq eval '.' ${{ inputs.config_file }} > /dev/null 2>&1; then
-                result=$(yq -o=json -I=0 '.include = (.accounts // []) | del(.accounts)' ${{ inputs.config_file }})
-                  # Use a heredoc to handle potential multiline data safely
-                  {
-                    echo "config_data<<EOF"
-                    echo "$result"
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
+      run: |
+        if [[ -f "${{ inputs.config_file }}" ]]; then
+            # Validate JSON
+            if yq eval '.' ${{ inputs.config_file }} > /dev/null 2>&1; then
+              result=$(yq -o=json -I=0 '.include = (.accounts // []) | del(.accounts)' ${{ inputs.config_file }})
+                # Use a heredoc to handle potential multiline data safely
+                {
+                  echo "config_data<<EOF"
+                  echo "$result"
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '(.accounts // [])' ${{ inputs.config_file }})
-                  {
-                    echo "accounts<<EOF"
-                    echo "$result"
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
+                result=$(yq -o=json -I=0 '(.accounts // [])' ${{ inputs.config_file }})
+                {
+                  echo "accounts<<EOF"
+                  echo "$result"
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '(.accounts // []) | [.[] .stack]' ${{ inputs.config_file }})
-                  {
-                    echo "stacks<<EOF"
-                    echo "$result"
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
+                result=$(yq -o=json -I=0 '(.accounts // []) | [.[] .stack]' ${{ inputs.config_file }})
+                {
+                  echo "stacks<<EOF"
+                  echo "$result"
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '(.profiles // [])' ${{ inputs.config_file }})
-                  # Use a heredoc to handle potential multiline data safely
-                  {
-                    echo "profiles<<EOF"
-                    echo "$result"
-                    echo "EOF"
-                  } >> "$GITHUB_OUTPUT"
+                result=$(yq -o=json -I=0 '(.profiles // [])' ${{ inputs.config_file }})
+                # Use a heredoc to handle potential multiline data safely
+                {
+                  echo "profiles<<EOF"
+                  echo "$result"
+                  echo "EOF"
+                } >> "$GITHUB_OUTPUT"
 
-                  result=$(yq -o=json -I=0 '.accounts | length' ${{ inputs.config_file }})
-                  echo "accounts_count=$result" >> "$GITHUB_OUTPUT"
+                result=$(yq -o=json -I=0 '.accounts | length' ${{ inputs.config_file }})
+                echo "accounts_count=$result" >> "$GITHUB_OUTPUT"
 
-                  echo "Successfully wrote config to GITHUB_OUTPUT"
-              else
-                  echo "Error: ${{ inputs.config_file }} contains invalid YAML"
-                  exit 1
-              fi
-          else
-              echo "Error: ${{ inputs.config_file }} not found"
-              exit 1
-          fi
+                echo "Successfully wrote config to GITHUB_OUTPUT"
+            else
+                echo "Error: ${{ inputs.config_file }} contains invalid YAML"
+                exit 1
+            fi
+        else
+            echo "Error: ${{ inputs.config_file }} not found"
+            exit 1
+        fi
 
-      - name: Count terraform changed labels
-        id: label-count
-        env:
-          LABELS_JSON: ${{ toJSON(github.event.issue.labels.*.name) }}
-        run: |
-          COUNT=$(echo "$LABELS_JSON" | jq '[.[] | select(test("^terraform-.*-changed$"))] | length')
-          echo "$COUNT terraform environments were changed."
-          echo "terraform_changed=$COUNT" >> "$GITHUB_OUTPUT"
+    - name: Count terraform changed labels
+      id: label-count
+      env:
+        LABELS_JSON: ${{ toJSON(github.event.issue.labels.*.name) }}
+      run: |
+        COUNT=$(echo "$LABELS_JSON" | jq '[.[] | select(test("^terraform-.*-changed$"))] | length')
+        echo "$COUNT terraform environments were changed."
+        echo "terraform_changed=$COUNT" >> "$GITHUB_OUTPUT"

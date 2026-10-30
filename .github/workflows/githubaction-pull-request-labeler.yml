@@ -100,7 +100,7 @@ jobs:
           echo "add do-not-apply label"
           gh label create "do-not-apply" --color "B60205" --force 2>/dev/null || true
           gh pr edit "$PR_NUMBER" --add-label "do-not-apply"
-        fi        
+        fi
 
         if [ "$TERRAFORM_CHANGED" = true ]; then
           echo "Terraform changes detected."

@@ -1,9 +1,10 @@
+---
 name: 'TofuPlanScheduled'
 
 env:
   OPENTOFU_VERSION: "1.13.2"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       region:
@@ -40,7 +41,7 @@ on:
         required: false
         type: string
         default: ""
-    secrets: # 2. Explicitly declare required secrets for cross-org calls
+    secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
@@ -101,7 +102,7 @@ jobs:
         aws-region: ${{ fromJSON(inputs.profiles)[2].region }}
         role-to-assume: ${{ fromJSON(inputs.profiles)[2].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[2].name }}
-        
+
     - name: Configure AWS Credentials via Profile 3
       if: ${{ fromJSON(inputs.profiles)[3] != null }}
       id: configure-aws-credentials-3
@@ -110,7 +111,7 @@ jobs:
         aws-region: ${{ fromJSON(inputs.profiles)[3].region }}
         role-to-assume: ${{ fromJSON(inputs.profiles)[3].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[3].name }}
-  
+
     - name: Configure AWS Credentials via Profile 4
       if: ${{ fromJSON(inputs.profiles)[4] != null }}
       id: configure-aws-credentials-4

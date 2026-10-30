@@ -1,3 +1,4 @@
+---
 name: 'TofuApply'
 
 concurrency:
@@ -7,7 +8,7 @@ concurrency:
 env:
   OPENTOFU_VERSION: "1.13.2"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       region:
@@ -60,7 +61,7 @@ on:
         required: false
         type: string
         default: "arvatoaws"
-    secrets: # 2. Explicitly declare required secrets for cross-org calls
+    secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
@@ -96,7 +97,7 @@ jobs:
     environment:
       name: ${{ inputs.stack }}
       deployment: false
-      
+
     if: ${{ inputs.execute == true }}
 
     steps:
@@ -126,7 +127,7 @@ jobs:
         aws-region: ${{ fromJSON(inputs.profiles)[2].region }}
         role-to-assume: ${{ fromJSON(inputs.profiles)[2].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[2].name }}
-        
+
     - name: Configure AWS Credentials via Profile 3
       if: ${{ fromJSON(inputs.profiles)[3] != null }}
       id: configure-aws-credentials-3
@@ -135,7 +136,7 @@ jobs:
         aws-region: ${{ fromJSON(inputs.profiles)[3].region }}
         role-to-assume: ${{ fromJSON(inputs.profiles)[3].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[3].name }}
-  
+
     - name: Configure AWS Credentials via Profile 4
       if: ${{ fromJSON(inputs.profiles)[4] != null }}
       id: configure-aws-credentials-4
@@ -329,7 +330,7 @@ jobs:
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`s
 
         gh label create "terraform-${{ inputs.stack }}-applied" --color "008000" --force
-        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"
 
         gh label create "terraform-applied" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied"
@@ -349,7 +350,7 @@ jobs:
           -F auto_merge=false \
           -F "required_contexts[]" \
           -q .id)
-        
+
         # Mark deployment as successful
         gh api "repos/${{ github.repository }}/deployments/$DEPLOYMENT_ID/statuses" \
           -f state=success \

@@ -1,9 +1,10 @@
+---
 name: 'TofuPlan'
 
 env:
   OPENTOFU_VERSION: "1.13.2"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       region:
@@ -53,7 +54,7 @@ on:
         required: false
         type: boolean
         default: false
-    secrets: # 2. Explicitly declare required secrets for cross-org calls
+    secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
@@ -112,7 +113,7 @@ jobs:
         aws-region: ${{ fromJSON(inputs.profiles)[2].region }}
         role-to-assume: ${{ fromJSON(inputs.profiles)[2].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[2].name }}
-        
+
     - name: Configure AWS Credentials via Profile 3
       if: ${{ fromJSON(inputs.profiles)[3] != null }}
       id: configure-aws-credentials-3
@@ -121,7 +122,7 @@ jobs:
         aws-region: ${{ fromJSON(inputs.profiles)[3].region }}
         role-to-assume: ${{ fromJSON(inputs.profiles)[3].roleArn }}
         aws-profile: ${{ fromJSON(inputs.profiles)[3].name }}
-  
+
     - name: Configure AWS Credentials via Profile 4
       if: ${{ fromJSON(inputs.profiles)[4] != null }}
       id: configure-aws-credentials-4
@@ -169,7 +170,7 @@ jobs:
         client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
         private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
         owner: ${{ inputs.OrgOwner }}
-        
+
     # Get the github token with access to the relevant repositories from the app
     - name: Generate modules token
       id: generate-modules-token
@@ -313,12 +314,12 @@ jobs:
         gh label create "terraform-${{ inputs.stack }}-planned" --color "008000" --force
         gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-planned"
 
-        if [ "${{ steps.tfplan.outputs.changes }}" == "false" ] 
+        if [ "${{ steps.tfplan.outputs.changes }}" == "false" ]
           then
             gh label create "terraform-${{ inputs.stack }}-plan-no_changes" --force
             gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-plan-no_changes"
         fi
-        
+
         echo "$TIMESTAMP: Tofu plan successful on **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
     - name: Add Failed labels to GitHub PR
@@ -340,8 +341,8 @@ jobs:
 
     - name: Generate TF docs
       if: |
-        inputs.autoapply == true && 
-        steps.tfplan.outputs.changes == 'false' && 
+        inputs.autoapply == true &&
+        steps.tfplan.outputs.changes == 'false' &&
         (
           contains(join(github.event.pull_request.labels.*.name, ','), 'terraform-autoapply-allowed') || contains(join(github.event.issue.labels.*.name, ','), 'terraform-autoapply-allowed')
         )
@@ -362,8 +363,8 @@ jobs:
     - name: terraform apply ${{ inputs.stack }}
 
       if: |
-        inputs.autoapply == true && 
-        steps.tfplan.outputs.changes == 'false' && 
+        inputs.autoapply == true &&
+        steps.tfplan.outputs.changes == 'false' &&
         (
           contains(join(github.event.pull_request.labels.*.name, ','), 'terraform-autoapply-allowed') || contains(join(github.event.issue.labels.*.name, ','), 'terraform-autoapply-allowed')
         )
@@ -396,14 +397,14 @@ jobs:
           curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
           unzip -qq -o awscliv2.zip
           ./aws/install
-          /usr/local/bin/aws --version      
-  
+          /usr/local/bin/aws --version
+
     - name: Add labels to GitHub PR
       id: add-autoapply-labels
 
       if: |
-        inputs.autoapply == true && 
-        steps.tfplan.outputs.changes == 'false' && 
+        inputs.autoapply == true &&
+        steps.tfplan.outputs.changes == 'false' &&
         (
           contains(join(github.event.pull_request.labels.*.name, ','), 'terraform-autoapply-allowed') || contains(join(github.event.issue.labels.*.name, ','), 'terraform-autoapply-allowed')
         )
@@ -416,25 +417,25 @@ jobs:
         TIMESTAMP=`date "+%Y-%m-%d %H:%M:%S"`
 
         gh label create "terraform-${{ inputs.stack }}-applied" --color "008000" --force
-        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"     
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-applied"
 
         gh label create "terraform-${{ inputs.stack }}-autoapplied" --color "008000" --force
-        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-autoapplied"  
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-${{ inputs.stack }}-autoapplied"
 
         gh label create "terraform-applied" --color "008000" --force
-        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied" 
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-applied"
 
         gh label create "terraform-autoapplied" --color "008000" --force
-        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-autoapplied" 
+        gh pr edit ${{ inputs.github_event_number }} --add-label "terraform-autoapplied"
 
         echo "$TIMESTAMP: Successfully applied Tofu to **${{ inputs.stack }}** (env: ${{ inputs.environment }})" >> error_log.txt
 
     - name: Merging Pull request (autoapply)
       id: merge-autoapply
-      
+
       if: |
-        inputs.autoapply == true && 
-        steps.tfplan.outputs.changes == 'false' && 
+        inputs.autoapply == true &&
+        steps.tfplan.outputs.changes == 'false' &&
         (
           contains(join(github.event.pull_request.labels.*.name, ','), 'terraform-autoapply-allowed') || contains(join(github.event.issue.labels.*.name, ','), 'terraform-autoapply-allowed')
         )

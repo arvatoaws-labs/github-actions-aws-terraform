@@ -1,7 +1,7 @@
 ---
 name: 'Debug'
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
 
 jobs:

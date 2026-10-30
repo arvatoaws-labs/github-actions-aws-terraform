@@ -8,8 +8,8 @@ jobs:
   check-terraform-applied:
     runs-on: arvato
     steps:
-      - name: Check for 'terraform-applied' label
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'terraform-applied') && contains(github.event.pull_request.labels.*.name, 'terraform-changed')}}
-        run: |
-          echo "Blocking merge. Terraform not applied."
-          exit 1
+    - name: Check for 'terraform-applied' label
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'terraform-applied') && contains(github.event.pull_request.labels.*.name, 'terraform-changed')}}
+      run: |
+        echo "Blocking merge. Terraform not applied."
+        exit 1

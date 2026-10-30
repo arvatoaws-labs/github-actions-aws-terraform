@@ -1,9 +1,10 @@
+---
 name: 'TofuScheduledDrift'
 
 env:
   OPENTOFU_VERSION: "1.13.2"
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
   workflow_call:
     inputs:
@@ -41,7 +42,7 @@ on:
         required: false
         type: string
         default: "arvatoaws"
-    secrets: # 2. Explicitly declare required secrets for cross-org calls
+    secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
@@ -111,7 +112,7 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v7
-  
+
     - name: Reading Terraform variables from GitHub Secrets
       run: |
         SECRETS_JSON='${{ toJson(secrets) }}'

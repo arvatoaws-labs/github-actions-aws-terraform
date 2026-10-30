@@ -12,7 +12,7 @@ on:  # yamllint disable-line rule:truthy
         required: false
         type: string
         default: "arvatoaws"
-    secrets: # 2. Explicitly declare required secrets for cross-org calls
+    secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
@@ -43,7 +43,7 @@ jobs:
     needs: init
 
     strategy:
-      matrix: 
+      matrix:
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
     if: ${{ needs.init.outputs.accounts_count > 0 }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-scheduled-plan.yml@v2

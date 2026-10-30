@@ -1,6 +1,7 @@
+---
 name: ds-deploy
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       upload:
@@ -39,145 +40,145 @@ jobs:
       pages: write
 
     steps:
-      # Get the github token with access to the relevant repositories from the app
-      - name: Generate token
-        id: generate-token
-        uses: actions/create-github-app-token@v3
-        with:
-          client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
-          private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
-          owner: ${{ inputs.owner }}
+    # Get the github token with access to the relevant repositories from the app
+    - name: Generate token
+      id: generate-token
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ secrets.TERRAFORM_GITHUB_ACTION_CLIENT_ID }}
+        private-key: ${{ secrets.TERRAFORM_GITHUB_ACTION_PRIVATE_KEY }}
+        owner: ${{ inputs.owner }}
 
-      - uses: actions/checkout@v6
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-          fetch-depth: 0
+    - uses: actions/checkout@v6
+      with:
+        token: ${{ steps.generate-token.outputs.token }}
+        fetch-depth: 0
 
-      - name: Read local repo config
-        id: read-config
-        uses: arvatoaws-labs/github-actions-aws-terraform/actions/github-action-read-config@v2
+    - name: Read local repo config
+      id: read-config
+      uses: arvatoaws-labs/github-actions-aws-terraform/actions/github-action-read-config@v2
 
-      - uses: actions/checkout@v6
-        id: checkout-documentation-hub
-        with:
-          repository: arvatoaws/documentation-hub
-          token: ${{ steps.generate-token.outputs.token }}
-          path: documentation-hub
+    - uses: actions/checkout@v6
+      id: checkout-documentation-hub
+      with:
+        repository: arvatoaws/documentation-hub
+        token: ${{ steps.generate-token.outputs.token }}
+        path: documentation-hub
 
-      - name: Check if docusaurus directory exists
-        id: check-local-docusaurus
-        run: |
-          if [ -d "docusaurus" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
+    - name: Check if docusaurus directory exists
+      id: check-local-docusaurus
+      run: |
+        if [ -d "docusaurus" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Check if local docs folder exists
+      id: check-local-docs
+      run: |
+        if [ -d "docs" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Sync Remote docusaurus to local checkout
+      if: steps.check-local-docusaurus.outputs.exists == 'false'
+      run: |
+        mkdir -p docusaurus
+        cp -r documentation-hub/default/docusaurus/. docusaurus
+
+    - name: copy default docs folder to local checkout
+      if: steps.check-local-docs.outputs.exists == 'false'
+      run: |
+        mkdir -p docs
+        cp -r documentation-hub/default/docs/. docs
+
+    - name: copy account readme files for repositories of type Terraform
+      if: inputs.repository_type == 'Terraform'
+      id: copy-account-readme-terraform
+      run: |
+        # Use a while loop to be safer with spaces or special characters
+        echo '${{ steps.read-config.outputs.stacks }}' | jq -r '.[]' | while read -r stack; do
+          cp $stack/README.md ${{ github.workspace }}/docs/accounts/$stack.md
+        done
+      shell: bash
+
+    - name: upload local docs folder to documentation hub
+      if: inputs.upload == true
+      run: |
+        if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}" ]; then
+
+          if [ ! -d "documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}" ]; then
+            echo 'creating folder documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}'
+            mkdir -p 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}'
+            touch 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml'
+            cat <<EOF > 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml'
+        position: 2
+        label: ${{ inputs.project }}
+        collapsible: true
+        collapsed: true
+        link:
+          type: generated-index
+          title: ${{ inputs.project }}
+        EOF
           fi
 
-      - name: Check if local docs folder exists
-        id: check-local-docs
-        run: |
-          if [ -d "docs" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
+          rm -rf 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
+          mkdir -p 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
+          cp -r docs/. 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
+
+          touch 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml'
+          cat <<EOF > 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml'
+        position: 2
+        label: ${{ inputs.repository_name }}
+        collapsible: true
+        collapsed: true
+        link:
+          type: generated-index
+          title: ${{ inputs.repository_name }}
+        EOF
+
+          cd documentation-hub
+          # Use the App's bot name and email for the commit record
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No changes to commit. Skipping."
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
+            git commit -m "chore: automated update of documentation for repo ${{ github.event.repository.name }}"
+            git push
           fi
+        else
+          echo "Customer folder does not exist."
+        fi
 
-      - name: Sync Remote docusaurus to local checkout
-        if: steps.check-local-docusaurus.outputs.exists == 'false'
-        run: |
-          mkdir -p docusaurus
-          cp -r documentation-hub/default/docusaurus/. docusaurus
+    - uses: actions/setup-node@v6
+      if: inputs.create_local
+      with:
+        node-version: 24
+        cache: npm
+        cache-dependency-path: '**/package-lock.json'
 
-      - name: copy default docs folder to local checkout
-        if: steps.check-local-docs.outputs.exists == 'false'
-        run: |
-          mkdir -p docs
-          cp -r documentation-hub/default/docs/. docs
+    - name: Install dependencies
+      if: inputs.create_local
+      working-directory: docusaurus
+      run: |
+        npm ci
 
-      - name: copy account readme files for repositories of type Terraform
-        if: inputs.repository_type == 'Terraform'
-        id: copy-account-readme-terraform
-        run: |
-          # Use a while loop to be safer with spaces or special characters
-          echo '${{ steps.read-config.outputs.stacks }}' | jq -r '.[]' | while read -r stack; do
-            cp $stack/README.md ${{ github.workspace }}/docs/accounts/$stack.md
-          done
-        shell: bash
+    - name: Build website
+      if: inputs.create_local
+      working-directory: docusaurus
+      run: npm run build
 
-      - name: upload local docs folder to documentation hub
-        if: inputs.upload == true
-        run: |
-          if [ -d "documentation-hub/docs/customer/${{ inputs.customer }}" ]; then
-
-            if [ ! -d "documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}" ]; then
-              echo 'creating folder documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}'
-              mkdir -p 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}'
-              touch 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml'
-              cat <<EOF > 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/_category_.yml'
-          position: 2
-          label: ${{ inputs.project }}
-          collapsible: true
-          collapsed: true
-          link:
-            type: generated-index
-            title: ${{ inputs.project }}
-          EOF
-            fi
-            
-            rm -rf 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
-            mkdir -p 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
-            cp -r docs/. 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}'
-
-            touch 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml'
-            cat <<EOF > 'documentation-hub/docs/customer/${{ inputs.customer }}/${{ inputs.project }}/${{ github.event.repository.name }}/_category_.yml'
-          position: 2
-          label: ${{ inputs.repository_name }}
-          collapsible: true
-          collapsed: true
-          link:
-            type: generated-index
-            title: ${{ inputs.repository_name }}
-          EOF
-
-            cd documentation-hub
-            # Use the App's bot name and email for the commit record
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            
-            git add .
-            if [ -z "$(git status --porcelain)" ]; then
-              echo "No changes to commit. Skipping."
-            else
-              git commit -m "chore: automated update of documentation for repo ${{ github.event.repository.name }}"
-              git push
-            fi
-          else
-            echo "Customer folder does not exist."
-          fi
-
-      - uses: actions/setup-node@v6
-        if: inputs.create_local
-        with:
-          node-version: 24
-          cache: npm
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Install dependencies
-        if: inputs.create_local
-        working-directory: docusaurus
-        run: |
-          npm ci
-
-      - name: Build website
-        if: inputs.create_local
-        working-directory: docusaurus
-        run: npm run build
-
-      - name: Upload Build Artifact
-        if: inputs.create_local
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: docusaurus/build
+    - name: Upload Build Artifact
+      if: inputs.create_local
+      uses: actions/upload-pages-artifact@v5
+      with:
+        path: docusaurus/build
 
   deploy:
     name: Deploy to GitHub Pages
@@ -187,8 +188,8 @@ jobs:
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:
-      pages: write # to deploy to Pages
-      id-token: write # to verify the deployment originates from an appropriate source
+      pages: write  # to deploy to Pages
+      id-token: write  # to verify the deployment originates from an appropriate source
 
     # Deploy to the github-pages environment
     environment:
@@ -197,6 +198,6 @@ jobs:
 
     runs-on: arvato
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v5

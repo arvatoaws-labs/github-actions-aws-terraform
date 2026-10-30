@@ -12,7 +12,7 @@ on:  # yamllint disable-line rule:truthy
         required: false
         type: string
         default: "arvatoaws"
-    secrets: # 2. Explicitly declare required secrets for cross-org calls
+    secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
       TERRAFORM_GITHUB_ACTION_PRIVATE_KEY:
@@ -34,7 +34,7 @@ jobs:
 
   tf-labeler:
     needs: init
-    
+
     # Required permissions
     permissions:
       actions: read
@@ -61,7 +61,7 @@ jobs:
       pull-requests: write
 
     strategy:
-      matrix: 
+      matrix:
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
     if: ${{ needs.init.outputs.accounts_count > 0 && needs.tf-labeler.outputs.terraform-changed == 'true' }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2
@@ -98,7 +98,7 @@ jobs:
       pull-requests: write
 
     strategy:
-      matrix: 
+      matrix:
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
     if: ${{ needs.init.outputs.accounts_count > 0 && github.event.pull_request.user.login == 'renovate[bot]' && contains(github.event.pull_request.labels.*.name, 'terraform-changed') }}
     uses: arvatoaws-labs/github-actions-aws-terraform/.github/workflows/githubaction-comment-plan.yml@v2

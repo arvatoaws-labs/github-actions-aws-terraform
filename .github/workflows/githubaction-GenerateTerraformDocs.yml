@@ -1,6 +1,7 @@
+---
 name: 'GenerateTerraformDocs'
 
-on:
+on:  # yamllint disable-line rule:truthy
   workflow_call:
     inputs:
       TF_CONFIG_DIR:
