@@ -54,6 +54,10 @@ on:  # yamllint disable-line rule:truthy
         required: false
         type: boolean
         default: false
+      addTFPlan:
+        required: false
+        type: boolean
+        default: false
     secrets:  # 2. Explicitly declare required secrets for cross-org calls
       TERRAFORM_GITHUB_ACTION_CLIENT_ID:
         required: true
@@ -341,6 +345,7 @@ jobs:
 
     - name: Generate TF docs
       if: |
+        inputs.addTFPlan == true &&
         inputs.autoapply == true &&
         steps.tfplan.outputs.changes == 'false' &&
         (
