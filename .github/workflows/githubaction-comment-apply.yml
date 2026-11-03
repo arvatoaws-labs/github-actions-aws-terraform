@@ -135,7 +135,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
-        OPENTOFU_VERSION: 1.12.3
+        OPENTOFU_VERSION: 1.13.5
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -148,7 +148,7 @@ jobs:
       with:
         path: ${{ inputs.stack }}
       env:
-        OPENTOFU_VERSION: 1.12.3
+        OPENTOFU_VERSION: 1.13.5
         TERRAFORM_HTTP_CREDENTIALS: |
           github.com/arvatoaws=oauth:${{ steps.generate-token.outputs.token }}
         GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
@@ -194,7 +194,7 @@ jobs:
 
           echo "Zipped contents of $lambda_dir to $zip_name"
         done
-      
+
         # Verify contents of each module directory after zipping
         find .terraform/modules -mindepth 1 -maxdepth 1 -type d | while read dir; do
           echo "Contents of $dir:"
@@ -208,7 +208,7 @@ jobs:
           echo "Checking contents of $zip:"
           unzip -l "$zip"
         done
-  
+
     - name: Verify Lambda ZIPs
       run: |
         find ${{ inputs.stack }}/.terraform/modules -type f -name 'lambda.zip' -exec ls -l {} \;
@@ -283,7 +283,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd ${{ inputs.stack }}
-        (printf "Apply failed for ${{ inputs.stack }} environment:\n\n**Standard Output:**\n\n\`\`\`" && 
+        (printf "Apply failed for ${{ inputs.stack }} environment:\n\n**Standard Output:**\n\n\`\`\`" &&
         echo -n '${{ steps.apply.outputs.stdout }}' &&
         printf "\`\`\`\n\n**Error Output:**\n\n\`\`\`" &&
         echo -n '${{ steps.apply.outputs.stderr }}' &&
@@ -297,7 +297,7 @@ jobs:
           -H "Content-Type: application/json" \
           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           -d @comment3.txt
-          
+
     # Cleanup lambda.zip files
     # - name: Cleanup lambda.zip Files
     #   run: |
