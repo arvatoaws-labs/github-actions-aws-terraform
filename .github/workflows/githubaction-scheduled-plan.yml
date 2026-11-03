@@ -2,7 +2,7 @@
 name: 'TofuPlanScheduled'
 
 env:
-  OPENTOFU_VERSION: "1.13.2"
+  OPENTOFU_VERSION: "1.13.5"
 
 on:  # yamllint disable-line rule:truthy
   workflow_call:
