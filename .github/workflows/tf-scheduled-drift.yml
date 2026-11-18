@@ -43,6 +43,7 @@ jobs:
     needs: init
 
     strategy:
+      fail-fast: false
       matrix:
         account: ${{ fromJSON(needs.init.outputs.accounts) }}
     if: ${{ needs.init.outputs.accounts_count > 0 }}
